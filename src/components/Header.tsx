@@ -74,7 +74,7 @@ export default function Header() {
 							outlineWidth: 0,
 							color: 'inherit',
 						}}
-						placeholder="Search for a multisig address"
+						placeholder="Search a multisig address..."
 						value={multisigAddress}
 						onChange={e => setMultisigAddress(e.target.value as string)}
 						onKeyPress={e => {

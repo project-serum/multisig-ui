@@ -56,10 +56,9 @@ export const networks: Networks = {
     // Cluster.
     label: 'Mainnet Beta',
     url: 'https://solana-api.projectserum.com',
-    //url: 'https://api.mainnet-beta.solana.com',
     explorerClusterSuffix: '',
     multisigProgramId: new PublicKey(
-      '3S6ALMCGVib4X3vVR3CLpm2K6Ng5qbWFYMTo5jfxWcEq',
+      'A9HAbnCwoD6f2NkZobKFf6buJoN9gUVVvX5PoUnDHS6u',
     ),
   },
   devnet: {
@@ -68,10 +67,9 @@ export const networks: Networks = {
     url: 'https://devnet.solana.com',
     explorerClusterSuffix: 'devnet',
     multisigProgramId: new PublicKey(
-      '3S6ALMCGVib4X3vVR3CLpm2K6Ng5qbWFYMTo5jfxWcEq',
+      'F3Uf5F61dmht1xuNNNkk3jnzj82TY56vVjVEhZALRkN',
     ),
   },
-
   // Fill in with your local cluster addresses.
   localhost: {
     // Cluster.
