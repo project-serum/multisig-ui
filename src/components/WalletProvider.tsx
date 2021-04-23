@@ -4,22 +4,22 @@ import React, {
   ReactNode,
   useMemo,
   useContext,
-} from 'react';
-import { useSelector } from 'react-redux';
-import { Connection, ConfirmOptions } from '@solana/web3.js';
+} from "react";
+import { useSelector } from "react-redux";
+import { Connection, ConfirmOptions } from "@solana/web3.js";
 // @ts-ignore
-import Wallet from '@project-serum/sol-wallet-adapter';
-import { Provider } from '@project-serum/common';
-import { Program } from '@project-serum/anchor';
-import { State as StoreState } from '../store/reducer';
-import MultisigIdl from '../idl';
+import Wallet from "@project-serum/sol-wallet-adapter";
+import { Provider } from "@project-serum/common";
+import { Program } from "@project-serum/anchor";
+import { State as StoreState } from "../store/reducer";
+import MultisigIdl from "../idl";
 
 export function useWallet(): WalletContextValues {
   const w = useContext(WalletContext);
   if (!w) {
-    throw new Error('Missing wallet context');
+    throw new Error("Missing wallet context");
   }
-	// @ts-ignore
+  // @ts-ignore
   return w;
 }
 
@@ -31,7 +31,7 @@ type WalletContextValues = {
 };
 
 export default function WalletProvider(
-  props: PropsWithChildren<ReactNode>,
+  props: PropsWithChildren<ReactNode>
 ): ReactElement {
   const { walletProvider, network } = useSelector((state: StoreState) => {
     return {
@@ -40,13 +40,10 @@ export default function WalletProvider(
     };
   });
 
-  const {
-    wallet,
-    multisigClient,
-  } = useMemo(() => {
+  const { wallet, multisigClient } = useMemo(() => {
     const opts: ConfirmOptions = {
-      preflightCommitment: 'recent',
-      commitment: 'recent',
+      preflightCommitment: "recent",
+      commitment: "recent",
     };
     const connection = new Connection(network.url, opts.preflightCommitment);
     const wallet = new Wallet(walletProvider, network.url);
@@ -55,7 +52,7 @@ export default function WalletProvider(
     const multisigClient = new Program(
       MultisigIdl,
       network.multisigProgramId,
-      provider,
+      provider
     );
 
     return {
@@ -65,9 +62,7 @@ export default function WalletProvider(
   }, [walletProvider, network]);
 
   return (
-    <WalletContext.Provider
-      value={{ wallet, multisigClient }}
-    >
+    <WalletContext.Provider value={{ wallet, multisigClient }}>
       {props.children}
     </WalletContext.Provider>
   );

@@ -1,72 +1,75 @@
-import React, { useState, useEffect } from 'react';
-import { useHistory } from 'react-router';
-import { useSnackbar } from 'notistack';
-import { encode as encodeBase64 } from 'js-base64';
-import Container from '@material-ui/core/Container';
-import AppBar from '@material-ui/core/AppBar';
-import GavelIcon from '@material-ui/icons/Gavel';
-import DescriptionIcon from '@material-ui/icons/Description';
-import Paper from '@material-ui/core/Paper';
-import SupervisorAccountIcon from '@material-ui/icons/SupervisorAccount';
-import CheckIcon from '@material-ui/icons/Check';
-import ReceiptIcon from '@material-ui/icons/Receipt';
-import RemoveIcon from '@material-ui/icons/Remove';
-import Collapse from '@material-ui/core/Collapse';
-import Toolbar from '@material-ui/core/Toolbar';
-import InfoIcon from '@material-ui/icons/Info';
-import Table from '@material-ui/core/Table';
-import TableHead from '@material-ui/core/TableHead';
-import TableBody from '@material-ui/core/TableBody';
-import TableCell from '@material-ui/core/TableCell';
-import TableRow from '@material-ui/core/TableRow';
-import BuildIcon from '@material-ui/icons/Build';
-import Tooltip from '@material-ui/core/Tooltip';
-import CircularProgress from '@material-ui/core/CircularProgress';
-import Typography from '@material-ui/core/Typography';
-import Card from '@material-ui/core/Card';
-import ExpandLess from '@material-ui/icons/ExpandLess';
-import ExpandMore from '@material-ui/icons/ExpandMore';
-import CardContent from '@material-ui/core/CardContent';
-import TextField from '@material-ui/core/TextField';
-import IconButton from '@material-ui/core/IconButton';
-import Button from '@material-ui/core/Button';
-import DialogContent from '@material-ui/core/DialogContent';
-import DialogContentText from '@material-ui/core/DialogContentText';
-import Dialog from '@material-ui/core/Dialog';
-import DialogTitle from '@material-ui/core/DialogTitle';
-import DialogActions from '@material-ui/core/DialogActions';
-import AddIcon from '@material-ui/icons/Add';
-import List from '@material-ui/core/List';
-import ListItemIcon from '@material-ui/core/ListItemIcon';
-import ListItem from '@material-ui/core/ListItem';
-import ListItemText from '@material-ui/core/ListItemText';
-import CheckCircleIcon from '@material-ui/icons/CheckCircle';
-import BN from 'bn.js';
+import React, { useState, useEffect } from "react";
+import { useHistory } from "react-router";
+import { useSnackbar } from "notistack";
+import { encode as encodeBase64 } from "js-base64";
+import Container from "@material-ui/core/Container";
+import AppBar from "@material-ui/core/AppBar";
+import GavelIcon from "@material-ui/icons/Gavel";
+import DescriptionIcon from "@material-ui/icons/Description";
+import Paper from "@material-ui/core/Paper";
+import SupervisorAccountIcon from "@material-ui/icons/SupervisorAccount";
+import CheckIcon from "@material-ui/icons/Check";
+import ReceiptIcon from "@material-ui/icons/Receipt";
+import RemoveIcon from "@material-ui/icons/Remove";
+import Collapse from "@material-ui/core/Collapse";
+import Toolbar from "@material-ui/core/Toolbar";
+import InfoIcon from "@material-ui/icons/Info";
+import Table from "@material-ui/core/Table";
+import TableHead from "@material-ui/core/TableHead";
+import TableBody from "@material-ui/core/TableBody";
+import TableCell from "@material-ui/core/TableCell";
+import TableRow from "@material-ui/core/TableRow";
+import BuildIcon from "@material-ui/icons/Build";
+import Tooltip from "@material-ui/core/Tooltip";
+import CircularProgress from "@material-ui/core/CircularProgress";
+import Typography from "@material-ui/core/Typography";
+import Card from "@material-ui/core/Card";
+import ExpandLess from "@material-ui/icons/ExpandLess";
+import ExpandMore from "@material-ui/icons/ExpandMore";
+import CardContent from "@material-ui/core/CardContent";
+import TextField from "@material-ui/core/TextField";
+import IconButton from "@material-ui/core/IconButton";
+import Button from "@material-ui/core/Button";
+import DialogContent from "@material-ui/core/DialogContent";
+import DialogContentText from "@material-ui/core/DialogContentText";
+import Dialog from "@material-ui/core/Dialog";
+import DialogTitle from "@material-ui/core/DialogTitle";
+import DialogActions from "@material-ui/core/DialogActions";
+import AddIcon from "@material-ui/icons/Add";
+import List from "@material-ui/core/List";
+import ListItemIcon from "@material-ui/core/ListItemIcon";
+import ListItem from "@material-ui/core/ListItem";
+import ListItemText from "@material-ui/core/ListItemText";
+import CheckCircleIcon from "@material-ui/icons/CheckCircle";
+import BN from "bn.js";
 import {
   Account,
   PublicKey,
   SYSVAR_RENT_PUBKEY,
   SYSVAR_CLOCK_PUBKEY,
-} from '@solana/web3.js';
-import * as anchor from '@project-serum/anchor';
-import { useWallet } from './WalletProvider';
-import { ViewTransactionOnExplorerButton } from './Notification';
-import * as idl from '../utils/idl';
+} from "@solana/web3.js";
+import * as anchor from "@project-serum/anchor";
+import { useWallet } from "./WalletProvider";
+import { ViewTransactionOnExplorerButton } from "./Notification";
+import * as idl from "../utils/idl";
+import { networks } from "../store/reducer";
 
 export default function Multisig({ multisig }: { multisig?: PublicKey }) {
   return (
     <div>
-			<Container fixed maxWidth="md">
-				<div style={{
-					position: 'fixed',
-					bottom: '75px',
-					right: '75px',
-					display: 'flex',
-					flexDirection: 'row-reverse',
-				}}>
-					<NewMultisigButton />
-				</div>
-			</Container>
+      <Container fixed maxWidth="md">
+        <div
+          style={{
+            position: "fixed",
+            bottom: "75px",
+            right: "75px",
+            display: "flex",
+            flexDirection: "row-reverse",
+          }}
+        >
+          <NewMultisigButton />
+        </div>
+      </Container>
       {multisig && <MultisigInstance multisig={multisig} />}
     </div>
   );
@@ -75,16 +78,17 @@ export default function Multisig({ multisig }: { multisig?: PublicKey }) {
 function NewMultisigButton() {
   const [open, setOpen] = useState(false);
   return (
-    <div style={{ display: 'flex',  }}>
+    <div style={{ display: "flex" }}>
       <IconButton
-				style={{
-					border: 'solid 1pt #ccc',
-					width: '60px',
-					height: '60px',
-					borderRadius: '30px',
-				}}
-				onClick={() => setOpen(true)}>
-				<AddIcon />
+        style={{
+          border: "solid 1pt #ccc",
+          width: "60px",
+          height: "60px",
+          borderRadius: "30px",
+        }}
+        onClick={() => setOpen(true)}
+      >
+        <AddIcon />
       </IconButton>
       <NewMultisigDialog open={open} onClose={() => setOpen(false)} />
     </div>
@@ -97,7 +101,7 @@ export function MultisigInstance({ multisig }: { multisig: PublicKey }) {
   const [transactions, setTransactions] = useState<any>(null);
   const [showSignerDialog, setShowSignerDialog] = useState(false);
   const [showAddTransactionDialog, setShowAddTransactionDialog] = useState(
-    false,
+    false
   );
   const [forceRefresh, setForceRefresh] = useState(false);
   useEffect(() => {
@@ -112,28 +116,28 @@ export function MultisigInstance({ multisig }: { multisig: PublicKey }) {
       });
   }, [multisig, multisigClient.account]);
   useEffect(() => {
-    multisigClient.account.transaction.all(multisig.toBuffer()).then(txs => {
+    multisigClient.account.transaction.all(multisig.toBuffer()).then((txs) => {
       setTransactions(txs);
     });
   }, [multisigClient.account.transaction, multisig, forceRefresh]);
   useEffect(() => {
     multisigClient.account.multisig
       .subscribe(multisig)
-      .on('change', account => {
+      .on("change", (account) => {
         setMultisigAccount(account);
       });
   }, [multisigClient, multisig]);
   return (
-    <Container fixed maxWidth="md" style={{ marginBottom: '16px' }}>
+    <Container fixed maxWidth="md" style={{ marginBottom: "16px" }}>
       <div>
-        <Card style={{ marginTop: '24px' }}>
+        <Card style={{ marginTop: "24px" }}>
           {multisigAccount === undefined ? (
-            <div style={{ padding: '16px' }}>
+            <div style={{ padding: "16px" }}>
               <CircularProgress
                 style={{
-                  display: 'block',
-                  marginLeft: 'auto',
-                  marginRight: 'auto',
+                  display: "block",
+                  marginLeft: "auto",
+                  marginRight: "auto",
                 }}
               />
             </div>
@@ -142,8 +146,8 @@ export function MultisigInstance({ multisig }: { multisig: PublicKey }) {
               <Typography
                 color="textSecondary"
                 style={{
-                  padding: '24px',
-                  textAlign: 'center',
+                  padding: "24px",
+                  textAlign: "center",
                 }}
               >
                 Multisig not found
@@ -156,14 +160,14 @@ export function MultisigInstance({ multisig }: { multisig: PublicKey }) {
         {multisigAccount && (
           <Paper>
             <AppBar
-              style={{ marginTop: '24px' }}
+              style={{ marginTop: "24px" }}
               position="static"
               color="default"
               elevation={1}
             >
               <Toolbar>
                 <Typography variant="h6" style={{ flexGrow: 1 }} component="h2">
-                  {multisig.toString()} | {multisigAccount.threshold.toString()}{' '}
+                  {multisig.toString()} | {multisigAccount.threshold.toString()}{" "}
                   of {multisigAccount.owners.length.toString()} Multisig
                 </Typography>
                 <Tooltip title="Signer" arrow>
@@ -180,12 +184,12 @@ export function MultisigInstance({ multisig }: { multisig: PublicKey }) {
             </AppBar>
             <List disablePadding>
               {transactions === null ? (
-                <div style={{ padding: '16px' }}>
+                <div style={{ padding: "16px" }}>
                   <CircularProgress
                     style={{
-                      display: 'block',
-                      marginLeft: 'auto',
-                      marginRight: 'auto',
+                      display: "block",
+                      marginLeft: "auto",
+                      marginRight: "auto",
                     }}
                   />
                 </div>
@@ -238,17 +242,15 @@ export function NewMultisigDialog({
   const [threshold, setThreshold] = useState(2);
   // @ts-ignore
   const zeroAddr = new PublicKey().toString();
-  const [participants, setParticipants] = useState([
-    zeroAddr,
-  ]);
+  const [participants, setParticipants] = useState([zeroAddr]);
   const _onClose = () => {
     onClose();
     setThreshold(2);
     setParticipants([zeroAddr, zeroAddr]);
   };
   const createMultisig = async () => {
-    enqueueSnackbar('Creating multisig', {
-      variant: 'info',
+    enqueueSnackbar("Creating multisig", {
+      variant: "info",
     });
     const multisig = new Account();
     // Disc. + threshold + nonce.
@@ -258,9 +260,9 @@ export function NewMultisigDialog({
     const multisigSize = baseSize + ownerSize;
     const [, nonce] = await PublicKey.findProgramAddress(
       [multisig.publicKey.toBuffer()],
-      multisigClient.programId,
+      multisigClient.programId
     );
-    const owners = participants.map(p => new PublicKey(p));
+    const owners = participants.map((p) => new PublicKey(p));
     const tx = await multisigClient.rpc.createMultisig(
       owners,
       new BN(threshold),
@@ -275,13 +277,13 @@ export function NewMultisigDialog({
           await multisigClient.account.multisig.createInstruction(
             multisig,
             // @ts-ignore
-            multisigSize,
+            multisigSize
           ),
         ],
-      },
+      }
     );
     enqueueSnackbar(`Multisig created: ${multisig.publicKey.toString()}`, {
-      variant: 'success',
+      variant: "success",
       action: <ViewTransactionOnExplorerButton signature={tx} />,
     });
     _onClose();
@@ -300,7 +302,7 @@ export function NewMultisigDialog({
           label="Threshold"
           value={threshold}
           type="number"
-          onChange={e => setThreshold(parseInt(e.target.value) as number)}
+          onChange={(e) => setThreshold(parseInt(e.target.value) as number)}
         />
         {participants.map((p, idx) => (
           <TextField
@@ -308,14 +310,14 @@ export function NewMultisigDialog({
             fullWidth
             label="Participant"
             value={p}
-            onChange={e => {
+            onChange={(e) => {
               const p = [...participants];
               p[idx] = e.target.value;
               setParticipants(p);
             }}
           />
         ))}
-        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <div style={{ display: "flex", justifyContent: "flex-end" }}>
           <IconButton
             onClick={() => {
               const p = [...participants];
@@ -335,10 +337,10 @@ export function NewMultisigDialog({
           type="submit"
           color="primary"
           onClick={() =>
-            createMultisig().catch(err => {
-              const str = err ? err.toString() : '';
+            createMultisig().catch((err) => {
+              const str = err ? err.toString() : "";
               enqueueSnackbar(`Error creating multisig: ${str}`, {
-                variant: 'error',
+                variant: "error",
               });
             })
           }
@@ -366,30 +368,30 @@ function TxListItem({
   useEffect(() => {
     multisigClient.account.transaction
       .subscribe(tx.publicKey)
-      .on('change', account => {
+      .on("change", (account) => {
         setTxAccount(account);
       });
   }, [multisigClient, multisig, tx.publicKey]);
   const rows = [
     {
-      field: 'Program ID',
+      field: "Program ID",
       value: txAccount.programId.toString(),
     },
     {
-      field: 'Did execute',
+      field: "Did execute",
       value: txAccount.didExecute.toString(),
     },
     {
-      field: 'Instruction data',
+      field: "Instruction data",
       value: (
         <code
           style={{
-            wordBreak: 'break-word',
-            width: '370px',
-            background: 'black',
-            color: '#ffffff',
-            float: 'right',
-            textAlign: 'left',
+            wordBreak: "break-word",
+            width: "370px",
+            background: "black",
+            color: "#ffffff",
+            float: "right",
+            textAlign: "left",
           }}
         >
           {encodeBase64(txAccount.data)}
@@ -397,15 +399,15 @@ function TxListItem({
       ),
     },
     {
-      field: 'Multisig',
+      field: "Multisig",
       value: txAccount.multisig.toString(),
     },
     {
-      field: 'Transaction account',
+      field: "Transaction account",
       value: tx.publicKey.toString(),
     },
     {
-      field: 'Owner set seqno',
+      field: "Owner set seqno",
       value: txAccount.ownerSetSeqno.toString(),
     },
   ];
@@ -415,11 +417,11 @@ function TxListItem({
         field: owner.toString(),
         value: txAccount.signers[idx] ? <CheckIcon /> : <RemoveIcon />,
       };
-    },
+    }
   );
   const approve = async () => {
-    enqueueSnackbar('Approving transaction', {
-      variant: 'info',
+    enqueueSnackbar("Approving transaction", {
+      variant: "info",
     });
     await multisigClient.rpc.approve({
       accounts: {
@@ -428,17 +430,17 @@ function TxListItem({
         owner: multisigClient.provider.wallet.publicKey,
       },
     });
-    enqueueSnackbar('Transaction approved', {
-      variant: 'success',
+    enqueueSnackbar("Transaction approved", {
+      variant: "success",
     });
   };
   const execute = async () => {
-    enqueueSnackbar('Executing transaction', {
-      variant: 'info',
+    enqueueSnackbar("Executing transaction", {
+      variant: "info",
     });
     const [multisigSigner] = await PublicKey.findProgramAddress(
       [multisig.toBuffer()],
-      multisigClient.programId,
+      multisigClient.programId
     );
     await multisigClient.rpc.executeTransaction({
       accounts: {
@@ -459,8 +461,8 @@ function TxListItem({
           isSigner: false,
         }),
     });
-    enqueueSnackbar('Transaction executed', {
-      variant: 'success',
+    enqueueSnackbar("Transaction executed", {
+      variant: "success",
     });
   };
   return (
@@ -469,25 +471,25 @@ function TxListItem({
         <ListItemIcon>{icon(tx, multisigClient)}</ListItemIcon>
         {ixLabel(tx, multisigClient)}
         {txAccount.didExecute && (
-          <CheckCircleIcon style={{ marginRight: '16px' }} />
+          <CheckCircleIcon style={{ marginRight: "16px" }} />
         )}
         {open ? <ExpandLess /> : <ExpandMore />}
       </ListItem>
       <Collapse in={open} timeout="auto" unmountOnExit>
-        <div style={{ background: '#ececec', padding: '10px' }}>
-          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <div style={{ background: "#ececec", padding: "10px" }}>
+          <div style={{ display: "flex", justifyContent: "flex-end" }}>
             <Button
-              style={{ marginRight: '10px' }}
+              style={{ marginRight: "10px" }}
               variant="contained"
               color="primary"
               onClick={() =>
-                approve().catch(err => {
-                  let errStr = '';
+                approve().catch((err) => {
+                  let errStr = "";
                   if (err) {
                     errStr = err.toString();
                   }
                   enqueueSnackbar(`Unable to approve transaction: ${errStr}`, {
-                    variant: 'error',
+                    variant: "error",
                   });
                 })
               }
@@ -498,13 +500,13 @@ function TxListItem({
               variant="contained"
               color="secondary"
               onClick={() =>
-                execute().catch(err => {
-                  let errStr = '';
+                execute().catch((err) => {
+                  let errStr = "";
                   if (err) {
                     errStr = err.toString();
                   }
                   enqueueSnackbar(`Unable to execute transaction: ${errStr}`, {
-                    variant: 'error',
+                    variant: "error",
                   });
                 })
               }
@@ -512,7 +514,7 @@ function TxListItem({
               Execute
             </Button>
           </div>
-          <Card style={{ marginTop: '16px' }}>
+          <Card style={{ marginTop: "16px" }}>
             <CardContent>
               <Table>
                 <TableHead>
@@ -522,7 +524,7 @@ function TxListItem({
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {rows.map(r => (
+                  {rows.map((r) => (
                     <TableRow>
                       <TableCell>{r.field}</TableCell>
                       <TableCell align="right">{r.value}</TableCell>
@@ -532,7 +534,7 @@ function TxListItem({
               </Table>
             </CardContent>
           </Card>
-          <Card style={{ marginTop: '16px' }}>
+          <Card style={{ marginTop: "16px" }}>
             <CardContent>
               <Table>
                 <TableHead>
@@ -552,10 +554,10 @@ function TxListItem({
                 </TableBody>
               </Table>
               {txAccount.ownerSetSeqno !== multisigAccount.ownerSetSeqno && (
-                <div style={{ marginTop: '16px' }}>
+                <div style={{ marginTop: "16px" }}>
                   <Typography
                     color="textSecondary"
-                    style={{ textAlign: 'center' }}
+                    style={{ textAlign: "center" }}
                   >
                     The owner set has changed since this transaction was created
                   </Typography>
@@ -563,7 +565,7 @@ function TxListItem({
               )}
             </CardContent>
           </Card>
-          <Card style={{ marginTop: '16px' }}>
+          <Card style={{ marginTop: "16px" }}>
             <CardContent>
               <AccountsList accounts={txAccount.accounts} />
             </CardContent>
@@ -588,8 +590,8 @@ function ixLabel(tx: any, multisigClient: any) {
   }
   if (tx.account.programId.equals(multisigClient.programId)) {
     const setThresholdSighash = multisigClient.coder.sighash(
-      'global',
-      'change_threshold',
+      "global",
+      "change_threshold"
     );
     if (setThresholdSighash.equals(tx.account.data.slice(0, 8))) {
       return (
@@ -600,8 +602,8 @@ function ixLabel(tx: any, multisigClient: any) {
       );
     }
     const setOwnersSighash = multisigClient.coder.sighash(
-      'global',
-      'set_owners',
+      "global",
+      "set_owners"
     );
     if (setOwnersSighash.equals(tx.account.data.slice(0, 8))) {
       return (
@@ -659,8 +661,8 @@ function SignerDialog({
   useEffect(() => {
     PublicKey.findProgramAddress(
       [multisig.toBuffer()],
-      multisigClient.programId,
-    ).then(addrNonce => setSigner(addrNonce[0].toString()));
+      multisigClient.programId
+    ).then((addrNonce) => setSigner(addrNonce[0].toString()));
   }, [multisig, multisigClient.programId, setSigner]);
   return (
     <Dialog open={open} fullWidth onClose={onClose} maxWidth="md">
@@ -669,7 +671,13 @@ function SignerDialog({
           Multisig Info
         </Typography>
       </DialogTitle>
-      <DialogContent style={{ paddingBottom: '16px' }}>
+      <DialogContent style={{ paddingBottom: "16px" }}>
+        {multisig?.equals(networks.mainnet.multisigUpgradeAuthority!) && (
+          <DialogContentText>
+            This multisig is the upgrade authority for the multisig program
+            itself.
+          </DialogContentText>
+        )}
         <DialogContentText>
           <b>Program derived address</b>: {signer}. This is the address one
           should use as the authority for data governed by the multisig.
@@ -714,7 +722,7 @@ function AddTransactionDialog({
           New Transaction
         </Typography>
       </DialogTitle>
-      <DialogContent style={{ paddingBottom: '16px' }}>
+      <DialogContent style={{ paddingBottom: "16px" }}>
         <DialogContentText>
           Create a new transaction to be signed by the multisig. This
           transaction will not execute until enough owners have signed the
@@ -759,11 +767,11 @@ function ChangeThresholdListItem({
   const [open, setOpen] = useState(false);
   return (
     <>
-      <ListItem button onClick={() => setOpen(open => !open)}>
+      <ListItem button onClick={() => setOpen((open) => !open)}>
         <ListItemIcon>
           <GavelIcon />
         </ListItemIcon>
-        <ListItemText primary={'Change threshold'} />
+        <ListItemText primary={"Change threshold"} />
         {open ? <ExpandLess /> : <ExpandMore />}
       </ListItem>
       <Collapse in={open} timeout="auto" unmountOnExit>
@@ -791,13 +799,13 @@ function ChangeThresholdListItemDetails({
   // @ts-ignore
   const { enqueueSnackbar } = useSnackbar();
   const changeThreshold = async () => {
-    enqueueSnackbar('Creating change threshold transaction', {
-      variant: 'info',
+    enqueueSnackbar("Creating change threshold transaction", {
+      variant: "info",
     });
     const data = changeThresholdData(multisigClient, threshold);
     const [multisigSigner] = await PublicKey.findProgramAddress(
       [multisig.toBuffer()],
-      multisigClient.programId,
+      multisigClient.programId
     );
     const accounts = [
       {
@@ -829,13 +837,13 @@ function ChangeThresholdListItemDetails({
           await multisigClient.account.transaction.createInstruction(
             transaction,
             // @ts-ignore
-            txSize,
+            txSize
           ),
         ],
-      },
+      }
     );
-    enqueueSnackbar('Transaction created', {
-      variant: 'success',
+    enqueueSnackbar("Transaction created", {
+      variant: "success",
       action: <ViewTransactionOnExplorerButton signature={tx} />,
     });
     didAddTransaction(transaction.publicKey);
@@ -844,23 +852,23 @@ function ChangeThresholdListItemDetails({
   return (
     <div
       style={{
-        background: '#f1f0f0',
-        paddingLeft: '24px',
-        paddingRight: '24px',
+        background: "#f1f0f0",
+        paddingLeft: "24px",
+        paddingRight: "24px",
       }}
     >
       <TextField
         fullWidth
-        style={{ marginTop: '16px' }}
+        style={{ marginTop: "16px" }}
         label="Threshold"
         value={threshold}
         type="number"
-        onChange={e => {
+        onChange={(e) => {
           // @ts-ignore
           setThreshold(e.target.value);
         }}
       />
-      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+      <div style={{ display: "flex", justifyContent: "flex-end" }}>
         <Button onClick={() => changeThreshold()}>Change Threshold</Button>
       </div>
     </div>
@@ -879,11 +887,11 @@ function MultisigSetOwnersListItem({
   const [open, setOpen] = useState(false);
   return (
     <>
-      <ListItem button onClick={() => setOpen(open => !open)}>
+      <ListItem button onClick={() => setOpen((open) => !open)}>
         <ListItemIcon>
           <SupervisorAccountIcon />
         </ListItemIcon>
-        <ListItemText primary={'Set owners'} />
+        <ListItemText primary={"Set owners"} />
         {open ? <ExpandLess /> : <ExpandMore />}
       </ListItem>
       <Collapse in={open} timeout="auto" unmountOnExit>
@@ -909,19 +917,17 @@ function SetOwnersListItemDetails({
   const { multisigClient } = useWallet();
   // @ts-ignore
   const zeroAddr = new PublicKey().toString();
-  const [participants, setParticipants] = useState([
-    zeroAddr,
-  ]);
+  const [participants, setParticipants] = useState([zeroAddr]);
   const { enqueueSnackbar } = useSnackbar();
   const setOwners = async () => {
-    enqueueSnackbar('Creating setOwners transaction', {
-      variant: 'info',
+    enqueueSnackbar("Creating setOwners transaction", {
+      variant: "info",
     });
-    const owners = participants.map(p => new PublicKey(p));
+    const owners = participants.map((p) => new PublicKey(p));
     const data = setOwnersData(multisigClient, owners);
     const [multisigSigner] = await PublicKey.findProgramAddress(
       [multisig.toBuffer()],
-      multisigClient.programId,
+      multisigClient.programId
     );
     const accounts = [
       {
@@ -953,13 +959,13 @@ function SetOwnersListItemDetails({
           await multisigClient.account.transaction.createInstruction(
             transaction,
             // @ts-ignore
-            txSize,
+            txSize
           ),
         ],
-      },
+      }
     );
-    enqueueSnackbar('Transaction created', {
-      variant: 'success',
+    enqueueSnackbar("Transaction created", {
+      variant: "success",
       action: <ViewTransactionOnExplorerButton signature={tx} />,
     });
     didAddTransaction(transaction.publicKey);
@@ -968,25 +974,25 @@ function SetOwnersListItemDetails({
   return (
     <div
       style={{
-        background: '#f1f0f0',
-        paddingLeft: '24px',
-        paddingRight: '24px',
+        background: "#f1f0f0",
+        paddingLeft: "24px",
+        paddingRight: "24px",
       }}
     >
       {participants.map((p, idx) => (
         <TextField
           fullWidth
-          style={{ marginTop: '16px' }}
+          style={{ marginTop: "16px" }}
           label="Participant"
           value={p}
-          onChange={e => {
+          onChange={(e) => {
             const p = [...participants];
             p[idx] = e.target.value;
             setParticipants(p);
           }}
         />
       ))}
-      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+      <div style={{ display: "flex", justifyContent: "flex-end" }}>
         <IconButton
           onClick={() => {
             const p = [...participants];
@@ -1000,10 +1006,10 @@ function SetOwnersListItemDetails({
       </div>
       <div
         style={{
-          display: 'flex',
-          justifyContent: 'flex-end',
-          marginTop: '16px',
-          paddingBottom: '16px',
+          display: "flex",
+          justifyContent: "flex-end",
+          marginTop: "16px",
+          paddingBottom: "16px",
         }}
       >
         <Button onClick={() => setOwners()}>Set Owners</Button>
@@ -1024,11 +1030,11 @@ function IdlUpgradeListItem({
   const [open, setOpen] = useState(false);
   return (
     <>
-      <ListItem button onClick={() => setOpen(open => !open)}>
+      <ListItem button onClick={() => setOpen((open) => !open)}>
         <ListItemIcon>
           <DescriptionIcon />
         </ListItemIcon>
-        <ListItemText primary={'Upgrade IDL'} />
+        <ListItemText primary={"Upgrade IDL"} />
         {open ? <ExpandLess /> : <ExpandMore />}
       </ListItem>
       <Collapse in={open} timeout="auto" unmountOnExit>
@@ -1057,15 +1063,15 @@ function UpgradeIdlListItemDetails({
   const { multisigClient } = useWallet();
   const { enqueueSnackbar } = useSnackbar();
   const createTransactionAccount = async () => {
-    enqueueSnackbar('Creating transaction', {
-      variant: 'info',
+    enqueueSnackbar("Creating transaction", {
+      variant: "info",
     });
     const programAddr = new PublicKey(programId as string);
     const bufferAddr = new PublicKey(buffer as string);
     const idlAddr = await anchor.utils.idlAddress(programAddr);
     const [multisigSigner] = await PublicKey.findProgramAddress(
       [multisig.toBuffer()],
-      multisigClient.programId,
+      multisigClient.programId
     );
     const data = idl.encodeInstruction({ setBuffer: {} });
     const accs = [
@@ -1095,13 +1101,13 @@ function UpgradeIdlListItemDetails({
           await multisigClient.account.transaction.createInstruction(
             transaction,
             // @ts-ignore
-            txSize,
+            txSize
           ),
         ],
-      },
+      }
     );
-    enqueueSnackbar('Transaction created', {
-      variant: 'success',
+    enqueueSnackbar("Transaction created", {
+      variant: "success",
       action: <ViewTransactionOnExplorerButton signature={tx} />,
     });
     didAddTransaction(transaction.publicKey);
@@ -1111,31 +1117,31 @@ function UpgradeIdlListItemDetails({
   return (
     <div
       style={{
-        background: '#f1f0f0',
-        paddingLeft: '24px',
-        paddingRight: '24px',
+        background: "#f1f0f0",
+        paddingLeft: "24px",
+        paddingRight: "24px",
       }}
     >
       <TextField
         fullWidth
-        style={{ marginTop: '16px' }}
+        style={{ marginTop: "16px" }}
         label="Program ID"
         value={programId}
-        onChange={e => setProgramId(e.target.value as string)}
+        onChange={(e) => setProgramId(e.target.value as string)}
       />
       <TextField
-        style={{ marginTop: '16px' }}
+        style={{ marginTop: "16px" }}
         fullWidth
         label="New IDL buffer"
         value={buffer}
-        onChange={e => setBuffer(e.target.value as string)}
+        onChange={(e) => setBuffer(e.target.value as string)}
       />
       <div
         style={{
-          display: 'flex',
-          justifyContent: 'flex-end',
-          marginTop: '16px',
-          paddingBottom: '16px',
+          display: "flex",
+          justifyContent: "flex-end",
+          marginTop: "16px",
+          paddingBottom: "16px",
         }}
       >
         <Button onClick={() => createTransactionAccount()}>
@@ -1158,11 +1164,11 @@ function ProgramUpdateListItem({
   const [open, setOpen] = useState(false);
   return (
     <>
-      <ListItem button onClick={() => setOpen(open => !open)}>
+      <ListItem button onClick={() => setOpen((open) => !open)}>
         <ListItemIcon>
           <BuildIcon />
         </ListItemIcon>
-        <ListItemText primary={'Upgrade program'} />
+        <ListItemText primary={"Upgrade program"} />
         {open ? <ExpandLess /> : <ExpandMore />}
       </ListItem>
       <Collapse in={open} timeout="auto" unmountOnExit>
@@ -1177,7 +1183,7 @@ function ProgramUpdateListItem({
 }
 
 const BPF_LOADER_UPGRADEABLE_PID = new PublicKey(
-  'BPFLoaderUpgradeab1e11111111111111111111111',
+  "BPFLoaderUpgradeab1e11111111111111111111111"
 );
 
 function UpgradeProgramListItemDetails({
@@ -1195,8 +1201,8 @@ function UpgradeProgramListItemDetails({
   const { multisigClient } = useWallet();
   const { enqueueSnackbar } = useSnackbar();
   const createTransactionAccount = async () => {
-    enqueueSnackbar('Creating transaction', {
-      variant: 'info',
+    enqueueSnackbar("Creating transaction", {
+      variant: "info",
     });
     const programAddr = new PublicKey(programId as string);
     const bufferAddr = new PublicKey(buffer as string);
@@ -1205,10 +1211,10 @@ function UpgradeProgramListItemDetails({
 
     const programAccount = await (async () => {
       const programAccount = await multisigClient.provider.connection.getAccountInfo(
-        programAddr,
+        programAddr
       );
       if (programAccount === null) {
-        throw new Error('Invalid program ID');
+        throw new Error("Invalid program ID");
       }
       return {
         // Hard code deserialization.
@@ -1218,7 +1224,7 @@ function UpgradeProgramListItemDetails({
     const spill = multisigClient.provider.wallet.publicKey;
     const [multisigSigner] = await PublicKey.findProgramAddress(
       [multisig.toBuffer()],
-      multisigClient.programId,
+      multisigClient.programId
     );
     const accs = [
       {
@@ -1251,13 +1257,13 @@ function UpgradeProgramListItemDetails({
           await multisigClient.account.transaction.createInstruction(
             transaction,
             // @ts-ignore
-            txSize,
+            txSize
           ),
         ],
-      },
+      }
     );
-    enqueueSnackbar('Transaction created', {
-      variant: 'success',
+    enqueueSnackbar("Transaction created", {
+      variant: "success",
       action: <ViewTransactionOnExplorerButton signature={tx} />,
     });
     didAddTransaction(transaction.publicKey);
@@ -1267,31 +1273,31 @@ function UpgradeProgramListItemDetails({
   return (
     <div
       style={{
-        background: '#f1f0f0',
-        paddingLeft: '24px',
-        paddingRight: '24px',
+        background: "#f1f0f0",
+        paddingLeft: "24px",
+        paddingRight: "24px",
       }}
     >
       <TextField
         fullWidth
-        style={{ marginTop: '16px' }}
+        style={{ marginTop: "16px" }}
         label="Program ID"
         value={programId}
-        onChange={e => setProgramId(e.target.value as string)}
+        onChange={(e) => setProgramId(e.target.value as string)}
       />
       <TextField
-        style={{ marginTop: '16px' }}
+        style={{ marginTop: "16px" }}
         fullWidth
         label="New program buffer"
         value={buffer}
-        onChange={e => setBuffer(e.target.value as string)}
+        onChange={(e) => setBuffer(e.target.value as string)}
       />
       <div
         style={{
-          display: 'flex',
-          justifyContent: 'flex-end',
-          marginTop: '16px',
-          paddingBottom: '16px',
+          display: "flex",
+          justifyContent: "flex-end",
+          marginTop: "16px",
+          paddingBottom: "16px",
         }}
       >
         <Button onClick={() => createTransactionAccount()}>
@@ -1309,15 +1315,15 @@ function icon(tx, multisigClient) {
   }
   if (tx.account.programId.equals(multisigClient.programId)) {
     const setThresholdSighash = multisigClient.coder.sighash(
-      'global',
-      'change_threshold',
+      "global",
+      "change_threshold"
     );
     if (setThresholdSighash.equals(tx.account.data.slice(0, 8))) {
       return <GavelIcon />;
     }
     const setOwnersSighash = multisigClient.coder.sighash(
-      'global',
-      'set_owners',
+      "global",
+      "set_owners"
     );
     if (setOwnersSighash.equals(tx.account.data.slice(0, 8))) {
       return <SupervisorAccountIcon />;
@@ -1331,14 +1337,14 @@ function icon(tx, multisigClient) {
 
 // @ts-ignore
 function changeThresholdData(multisigClient, threshold) {
-  return multisigClient.coder.instruction.encode('change_threshold', {
+  return multisigClient.coder.instruction.encode("change_threshold", {
     threshold: new BN(threshold),
   });
 }
 
 // @ts-ignore
 function setOwnersData(multisigClient, owners) {
-  return multisigClient.coder.instruction.encode('set_owners', {
+  return multisigClient.coder.instruction.encode("set_owners", {
     owners,
   });
 }

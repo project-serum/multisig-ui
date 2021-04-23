@@ -1,8 +1,8 @@
-import React, { useState, PropsWithChildren } from 'react';
-import Typography from '@material-ui/core/Typography';
-import Button from '@material-ui/core/Button';
-import Header from './Header';
-import Footer from './Footer';
+import React, { useState, PropsWithChildren } from "react";
+import Typography from "@material-ui/core/Typography";
+import Button from "@material-ui/core/Button";
+import Header from "./Header";
+import Footer from "./Footer";
 
 type Props = {};
 
@@ -11,16 +11,16 @@ export default function Layout(props: PropsWithChildren<Props>) {
   return (
     <div
       style={{
-        display: 'flex',
-        minHeight: '100vh',
-        flexDirection: 'column',
-        backgroundColor: 'rgb(251, 251, 251)',
+        display: "flex",
+        minHeight: "100vh",
+        flexDirection: "column",
+        backgroundColor: "rgb(251, 251, 251)",
       }}
     >
       <div
         style={{
-          position: 'fixed',
-          width: '100%',
+          position: "fixed",
+          width: "100%",
           zIndex: 99,
         }}
       >
@@ -29,19 +29,19 @@ export default function Layout(props: PropsWithChildren<Props>) {
       </div>
       <div
         style={{
-          width: '100%',
-          marginTop: '94px',
+          width: "100%",
+          marginTop: "94px",
           flex: 1,
-          display: 'flex',
-          marginBottom: '30px', // Compensates for the fixed position footer.
+          display: "flex",
+          marginBottom: "30px", // Compensates for the fixed position footer.
         }}
       >
-        {window.localStorage.getItem('consent') ? (
-          <div style={{ width: '100%' }}>{props.children}</div>
+        {window.localStorage.getItem("consent") ? (
+          <div style={{ width: "100%" }}>{props.children}</div>
         ) : (
           <RiskDisclosureForm
             onConsent={() => {
-              window.localStorage.setItem('consent', 'true');
+              window.localStorage.setItem("consent", "true");
               setRefresh(!refresh);
             }}
           />
@@ -56,21 +56,21 @@ function RiskBar() {
   return (
     <div
       style={{
-        color: '#fff',
-        backgroundColor: 'rgb(39, 39, 39)',
-        height: '30px',
-        textAlign: 'center',
+        color: "#fff",
+        backgroundColor: "rgb(39, 39, 39)",
+        height: "30px",
+        textAlign: "center",
       }}
     >
       <div
         style={{
-          display: 'flex',
-          justifyContent: 'center',
-          flexDirection: 'column',
-          height: '100%',
+          display: "flex",
+          justifyContent: "center",
+          flexDirection: "column",
+          height: "100%",
         }}
       >
-        <Typography style={{ fontSize: '14px' }}>
+        <Typography style={{ fontSize: "14px" }}>
           Multisig is unaudited software. Use at your own risk.
         </Typography>
       </div>
@@ -82,19 +82,19 @@ function RiskDisclosureForm({ onConsent }: { onConsent: () => void }) {
   return (
     <div
       style={{
-        flex: '1',
-        display: 'flex',
-        justifyContent: 'center',
-        flexDirection: 'column',
-        textAlign: 'center',
+        flex: "1",
+        display: "flex",
+        justifyContent: "center",
+        flexDirection: "column",
+        textAlign: "center",
       }}
     >
-      <div style={{ width: '100%', display: 'flex' }}>
+      <div style={{ width: "100%", display: "flex" }}>
         <div
-          style={{ display: 'flex', marginLeft: 'auto', marginRight: 'auto' }}
+          style={{ display: "flex", marginLeft: "auto", marginRight: "auto" }}
         >
           <Typography
-            style={{ marginBottom: '16px', maxWidth: '1000px' }}
+            style={{ marginBottom: "16px", maxWidth: "1000px" }}
             color="textSecondary"
             variant="h4"
           >
@@ -106,7 +106,7 @@ function RiskDisclosureForm({ onConsent }: { onConsent: () => void }) {
           </Typography>
         </div>
       </div>
-      <div style={{ display: 'flex', marginLeft: 'auto', marginRight: 'auto' }}>
+      <div style={{ display: "flex", marginLeft: "auto", marginRight: "auto" }}>
         <Button variant="contained" color="primary" onClick={onConsent}>
           I agree
         </Button>

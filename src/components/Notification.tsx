@@ -1,8 +1,8 @@
-import React from 'react';
-import { useSelector } from 'react-redux';
-import Button from '@material-ui/core/Button';
-import { TransactionSignature } from '@solana/web3.js';
-import { State as StoreState } from '../store/reducer';
+import React from "react";
+import { useSelector } from "react-redux";
+import Button from "@material-ui/core/Button";
+import { TransactionSignature } from "@solana/web3.js";
+import { State as StoreState } from "../store/reducer";
 
 type Props = {
   signature: string;
@@ -12,21 +12,21 @@ export async function withTx(
   snack: any,
   beforeLabel: string,
   afterLabel: string,
-  execTx: () => Promise<TransactionSignature>,
+  execTx: () => Promise<TransactionSignature>
 ) {
   snack.enqueueSnackbar(beforeLabel, {
-    variant: 'info',
+    variant: "info",
   });
   try {
     let tx = await execTx();
     snack.closeSnackbar();
     snack.enqueueSnackbar(afterLabel, {
-      variant: 'success',
+      variant: "success",
       action: <ViewTransactionOnExplorerButton signature={tx} />,
     });
   } catch (err) {
     snack.enqueueSnackbar(`Error: ${err.toString()}`, {
-      variant: 'error',
+      variant: "error",
     });
   }
 }

@@ -1,299 +1,299 @@
-import { Idl } from '@project-serum/anchor';
+import { Idl } from "@project-serum/anchor";
 
 const idl: Idl = {
-  "version": "0.0.0",
-  "name": "multisig",
-  "instructions": [
+  version: "0.0.0",
+  name: "multisig",
+  instructions: [
     {
-      "name": "createMultisig",
-      "accounts": [
+      name: "createMultisig",
+      accounts: [
         {
-          "name": "multisig",
-          "isMut": true,
-          "isSigner": false
+          name: "multisig",
+          isMut: true,
+          isSigner: false,
         },
         {
-          "name": "rent",
-          "isMut": false,
-          "isSigner": false
-        }
+          name: "rent",
+          isMut: false,
+          isSigner: false,
+        },
       ],
-      "args": [
+      args: [
         {
-          "name": "owners",
-          "type": {
-            "vec": "publicKey"
-          }
+          name: "owners",
+          type: {
+            vec: "publicKey",
+          },
         },
         {
-          "name": "threshold",
-          "type": "u64"
+          name: "threshold",
+          type: "u64",
         },
         {
-          "name": "nonce",
-          "type": "u8"
-        }
-      ]
+          name: "nonce",
+          type: "u8",
+        },
+      ],
     },
     {
-      "name": "createTransaction",
-      "accounts": [
+      name: "createTransaction",
+      accounts: [
         {
-          "name": "multisig",
-          "isMut": false,
-          "isSigner": false
+          name: "multisig",
+          isMut: false,
+          isSigner: false,
         },
         {
-          "name": "transaction",
-          "isMut": true,
-          "isSigner": false
+          name: "transaction",
+          isMut: true,
+          isSigner: false,
         },
         {
-          "name": "proposer",
-          "isMut": false,
-          "isSigner": true
+          name: "proposer",
+          isMut: false,
+          isSigner: true,
         },
         {
-          "name": "rent",
-          "isMut": false,
-          "isSigner": false
-        }
+          name: "rent",
+          isMut: false,
+          isSigner: false,
+        },
       ],
-      "args": [
+      args: [
         {
-          "name": "pid",
-          "type": "publicKey"
+          name: "pid",
+          type: "publicKey",
         },
         {
-          "name": "accs",
-          "type": {
-            "vec": {
-              "defined": "TransactionAccount"
-            }
-          }
+          name: "accs",
+          type: {
+            vec: {
+              defined: "TransactionAccount",
+            },
+          },
         },
         {
-          "name": "data",
-          "type": "bytes"
-        }
-      ]
+          name: "data",
+          type: "bytes",
+        },
+      ],
     },
     {
-      "name": "approve",
-      "accounts": [
+      name: "approve",
+      accounts: [
         {
-          "name": "multisig",
-          "isMut": false,
-          "isSigner": false
+          name: "multisig",
+          isMut: false,
+          isSigner: false,
         },
         {
-          "name": "transaction",
-          "isMut": true,
-          "isSigner": false
+          name: "transaction",
+          isMut: true,
+          isSigner: false,
         },
         {
-          "name": "owner",
-          "isMut": false,
-          "isSigner": true
-        }
+          name: "owner",
+          isMut: false,
+          isSigner: true,
+        },
       ],
-      "args": []
+      args: [],
     },
     {
-      "name": "setOwners",
-      "accounts": [
+      name: "setOwners",
+      accounts: [
         {
-          "name": "multisig",
-          "isMut": true,
-          "isSigner": false
+          name: "multisig",
+          isMut: true,
+          isSigner: false,
         },
         {
-          "name": "multisigSigner",
-          "isMut": false,
-          "isSigner": true
-        }
+          name: "multisigSigner",
+          isMut: false,
+          isSigner: true,
+        },
       ],
-      "args": [
+      args: [
         {
-          "name": "owners",
-          "type": {
-            "vec": "publicKey"
-          }
-        }
-      ]
+          name: "owners",
+          type: {
+            vec: "publicKey",
+          },
+        },
+      ],
     },
     {
-      "name": "changeThreshold",
-      "accounts": [
+      name: "changeThreshold",
+      accounts: [
         {
-          "name": "multisig",
-          "isMut": true,
-          "isSigner": false
+          name: "multisig",
+          isMut: true,
+          isSigner: false,
         },
         {
-          "name": "multisigSigner",
-          "isMut": false,
-          "isSigner": true
-        }
+          name: "multisigSigner",
+          isMut: false,
+          isSigner: true,
+        },
       ],
-      "args": [
+      args: [
         {
-          "name": "threshold",
-          "type": "u64"
-        }
-      ]
+          name: "threshold",
+          type: "u64",
+        },
+      ],
     },
     {
-      "name": "executeTransaction",
-      "accounts": [
+      name: "executeTransaction",
+      accounts: [
         {
-          "name": "multisig",
-          "isMut": false,
-          "isSigner": false
+          name: "multisig",
+          isMut: false,
+          isSigner: false,
         },
         {
-          "name": "multisigSigner",
-          "isMut": false,
-          "isSigner": false
+          name: "multisigSigner",
+          isMut: false,
+          isSigner: false,
         },
         {
-          "name": "transaction",
-          "isMut": true,
-          "isSigner": false
-        }
+          name: "transaction",
+          isMut: true,
+          isSigner: false,
+        },
       ],
-      "args": []
-    }
+      args: [],
+    },
   ],
-  "accounts": [
+  accounts: [
     {
-      "name": "Multisig",
-      "type": {
-        "kind": "struct",
-        "fields": [
+      name: "Multisig",
+      type: {
+        kind: "struct",
+        fields: [
           {
-            "name": "owners",
-            "type": {
-              "vec": "publicKey"
-            }
+            name: "owners",
+            type: {
+              vec: "publicKey",
+            },
           },
           {
-            "name": "threshold",
-            "type": "u64"
+            name: "threshold",
+            type: "u64",
           },
           {
-            "name": "nonce",
-            "type": "u8"
+            name: "nonce",
+            type: "u8",
           },
           {
-            "name": "ownerSetSeqno",
-            "type": "u32"
-          }
-        ]
-      }
+            name: "ownerSetSeqno",
+            type: "u32",
+          },
+        ],
+      },
     },
     {
-      "name": "Transaction",
-      "type": {
-        "kind": "struct",
-        "fields": [
+      name: "Transaction",
+      type: {
+        kind: "struct",
+        fields: [
           {
-            "name": "multisig",
-            "type": "publicKey"
+            name: "multisig",
+            type: "publicKey",
           },
           {
-            "name": "programId",
-            "type": "publicKey"
+            name: "programId",
+            type: "publicKey",
           },
           {
-            "name": "accounts",
-            "type": {
-              "vec": {
-                "defined": "TransactionAccount"
-              }
-            }
+            name: "accounts",
+            type: {
+              vec: {
+                defined: "TransactionAccount",
+              },
+            },
           },
           {
-            "name": "data",
-            "type": "bytes"
+            name: "data",
+            type: "bytes",
           },
           {
-            "name": "signers",
-            "type": {
-              "vec": "bool"
-            }
+            name: "signers",
+            type: {
+              vec: "bool",
+            },
           },
           {
-            "name": "didExecute",
-            "type": "bool"
+            name: "didExecute",
+            type: "bool",
           },
           {
-            "name": "ownerSetSeqno",
-            "type": "u32"
-          }
-        ]
-      }
-    }
+            name: "ownerSetSeqno",
+            type: "u32",
+          },
+        ],
+      },
+    },
   ],
-  "types": [
+  types: [
     {
-      "name": "TransactionAccount",
-      "type": {
-        "kind": "struct",
-        "fields": [
+      name: "TransactionAccount",
+      type: {
+        kind: "struct",
+        fields: [
           {
-            "name": "pubkey",
-            "type": "publicKey"
+            name: "pubkey",
+            type: "publicKey",
           },
           {
-            "name": "isSigner",
-            "type": "bool"
+            name: "isSigner",
+            type: "bool",
           },
           {
-            "name": "isWritable",
-            "type": "bool"
-          }
-        ]
-      }
-    }
+            name: "isWritable",
+            type: "bool",
+          },
+        ],
+      },
+    },
   ],
-  "errors": [
+  errors: [
     {
-      "code": 100,
-      "name": "InvalidOwner",
-      "msg": "The given owner is not part of this multisig."
+      code: 100,
+      name: "InvalidOwner",
+      msg: "The given owner is not part of this multisig.",
     },
     {
-      "code": 101,
-      "name": "NotEnoughSigners",
-      "msg": "Not enough owners signed this transaction."
+      code: 101,
+      name: "NotEnoughSigners",
+      msg: "Not enough owners signed this transaction.",
     },
     {
-      "code": 102,
-      "name": "TransactionAlreadySigned",
-      "msg": "Cannot delete a transaction that has been signed by an owner."
+      code: 102,
+      name: "TransactionAlreadySigned",
+      msg: "Cannot delete a transaction that has been signed by an owner.",
     },
     {
-      "code": 103,
-      "name": "Overflow",
-      "msg": "Overflow when adding."
+      code: 103,
+      name: "Overflow",
+      msg: "Overflow when adding.",
     },
     {
-      "code": 104,
-      "name": "UnableToDelete",
-      "msg": "Cannot delete a transaction the owner did not create."
+      code: 104,
+      name: "UnableToDelete",
+      msg: "Cannot delete a transaction the owner did not create.",
     },
     {
-      "code": 105,
-      "name": "AlreadyExecuted",
-      "msg": "The given transaction has already been executed."
+      code: 105,
+      name: "AlreadyExecuted",
+      msg: "The given transaction has already been executed.",
     },
     {
-      "code": 106,
-      "name": "InvalidThreshold",
-      "msg": "Threshold must be less than or equal to the number of owners."
-    }
-  ]
+      code: 106,
+      name: "InvalidThreshold",
+      msg: "Threshold must be less than or equal to the number of owners.",
+    },
+  ],
 };
 
 export default idl;

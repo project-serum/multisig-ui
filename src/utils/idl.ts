@@ -1,5 +1,5 @@
-import { struct, Layout } from 'buffer-layout';
-import { rustEnum } from '@project-serum/borsh';
+import { struct, Layout } from "buffer-layout";
+import { rustEnum } from "@project-serum/borsh";
 
 // Simplified since we only use the SetBuffer variant.
 export type IdlInstruction =
@@ -16,11 +16,11 @@ type SetBuffer = {};
 type SetAuthority = {};
 
 const IDL_INSTRUCTION_LAYOUT: Layout<IdlInstruction> = rustEnum([
-  struct([], 'create'),
-  struct([], 'createBuffer'),
-  struct([], 'write'),
-  struct([], 'setBuffer'),
-  struct([], 'setAuthority'),
+  struct([], "create"),
+  struct([], "createBuffer"),
+  struct([], "write"),
+  struct([], "setBuffer"),
+  struct([], "setAuthority"),
 ]);
 
 export function encodeInstruction(i: IdlInstruction): Buffer {
@@ -30,4 +30,4 @@ export function encodeInstruction(i: IdlInstruction): Buffer {
 }
 
 // Reverse for little endian.
-export const IDL_TAG = Buffer.from('0a69e9a778bcf440', 'hex').reverse();
+export const IDL_TAG = Buffer.from("0a69e9a778bcf440", "hex").reverse();
