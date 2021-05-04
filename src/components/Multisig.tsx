@@ -248,16 +248,21 @@ export function NewMultisigDialog({
     setThreshold(2);
     setParticipants([zeroAddr, zeroAddr]);
   };
+  const [maxParticipantLength, setMaxParticipantLength] = useState(10);
+  const disableCreate = maxParticipantLength < participants.length;
   const createMultisig = async () => {
     enqueueSnackbar("Creating multisig", {
       variant: "info",
     });
     const multisig = new Account();
     // Disc. + threshold + nonce.
-    const baseSize = 8 + 8 + 1;
+    const baseSize = 8 + 8 + 1 + 4;
+    // Add enough for 2 more participants, in case the user changes one's
+    /// mind later.
+    const fudge = 64;
     // Can only grow the participant set by 2x the initialized value.
-    const ownerSize = participants.length * 2 * 32 + 8;
-    const multisigSize = baseSize + ownerSize;
+    const ownerSize = maxParticipantLength * 32 + 8;
+    const multisigSize = baseSize + ownerSize + fudge;
     const [, nonce] = await PublicKey.findProgramAddress(
       [multisig.publicKey.toBuffer()],
       multisigClient.programId
@@ -304,6 +309,13 @@ export function NewMultisigDialog({
           type="number"
           onChange={(e) => setThreshold(parseInt(e.target.value) as number)}
         />
+        <TextField
+          fullWidth
+          label="Max Number of Participants (cannot grow the owner set past this)"
+          value={maxParticipantLength}
+          type="number"
+          onChange={(e) => setMaxParticipantLength(parseInt(e.target.value) as number)}
+        />
         {participants.map((p, idx) => (
           <TextField
             key={p}
@@ -333,6 +345,7 @@ export function NewMultisigDialog({
       <DialogActions>
         <Button onClick={_onClose}>Cancel</Button>
         <Button
+          disabled={disableCreate}
           variant="contained"
           type="submit"
           color="primary"
