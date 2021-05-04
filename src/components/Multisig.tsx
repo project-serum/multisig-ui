@@ -41,6 +41,7 @@ import ListItemIcon from "@material-ui/core/ListItemIcon";
 import ListItem from "@material-ui/core/ListItem";
 import ListItemText from "@material-ui/core/ListItemText";
 import CheckCircleIcon from "@material-ui/icons/CheckCircle";
+import FaceIcon from "@material-ui/icons/Face";
 import BN from "bn.js";
 import {
   Account,
@@ -314,7 +315,9 @@ export function NewMultisigDialog({
           label="Max Number of Participants (cannot grow the owner set past this)"
           value={maxParticipantLength}
           type="number"
-          onChange={(e) => setMaxParticipantLength(parseInt(e.target.value) as number)}
+          onChange={(e) =>
+            setMaxParticipantLength(parseInt(e.target.value) as number)
+          }
         />
         {participants.map((p, idx) => (
           <TextField
@@ -592,10 +595,17 @@ function TxListItem({
 function ixLabel(tx: any, multisigClient: any) {
   if (tx.account.programId.equals(BPF_LOADER_UPGRADEABLE_PID)) {
     // Upgrade instruction.
-    if (tx.account.data.equals(Buffer.from([3, 0, 0, 0]))) {
+    if (tx.account.data.equals(upgradeData())) {
       return (
         <ListItemText
           primary="Program upgrade"
+          secondary={tx.publicKey.toString()}
+        />
+      );
+    } else if (tx.account.data.equals(setAuthorityData())) {
+      return (
+        <ListItemText
+          primary="Set Authority"
           secondary={tx.publicKey.toString()}
         />
       );
@@ -762,9 +772,149 @@ function AddTransactionDialog({
             multisig={multisig}
             onClose={onClose}
           />
+          <SetAuthorityListItem
+            didAddTransaction={didAddTransaction}
+            multisig={multisig}
+            onClose={onClose}
+          />
         </List>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function SetAuthorityListItem({
+  multisig,
+  onClose,
+  didAddTransaction,
+}: {
+  multisig: PublicKey;
+  onClose: Function;
+  didAddTransaction: (tx: PublicKey) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <ListItem button onClick={() => setOpen((open) => !open)}>
+        <ListItemIcon>
+          <FaceIcon />
+        </ListItemIcon>
+        <ListItemText primary={"Set Authority"} />
+        {open ? <ExpandLess /> : <ExpandMore />}
+      </ListItem>
+      <Collapse in={open} timeout="auto" unmountOnExit>
+        <SetAuthorityListItemDetails
+          didAddTransaction={didAddTransaction}
+          multisig={multisig}
+          onClose={onClose}
+        />
+      </Collapse>
+    </>
+  );
+}
+
+function SetAuthorityListItemDetails({
+  multisig,
+  onClose,
+  didAddTransaction,
+}: {
+  multisig: PublicKey;
+  onClose: Function;
+  didAddTransaction: (tx: PublicKey) => void;
+}) {
+  // @ts-ignore
+  const [newAuthority, setNewAuthority] = useState(new PublicKey());
+  // @ts-ignore
+  const [bufferAccount, setBufferAccount] = useState(new PublicKey());
+  const { multisigClient } = useWallet();
+  // @ts-ignore
+  const { enqueueSnackbar } = useSnackbar();
+  const setAuthority = async () => {
+    enqueueSnackbar("Creating set authority transaction", {
+      variant: "info",
+    });
+    const data = setAuthorityData();
+    const [multisigSigner] = await PublicKey.findProgramAddress(
+      [multisig.toBuffer()],
+      multisigClient.programId
+    );
+    const accounts = [
+      {
+        pubkey: bufferAccount,
+        isWritable: true,
+        isSigner: false,
+      },
+      {
+        pubkey: multisigSigner,
+        isWritable: false,
+        isSigner: true,
+      },
+      {
+        pubkey: newAuthority,
+        isWritable: false,
+        isSigner: false,
+      },
+    ];
+    const transaction = new Account();
+    const txSize = 1000; // todo
+    const tx = await multisigClient.rpc.createTransaction(
+      BPF_LOADER_UPGRADEABLE_PID,
+      accounts,
+      data,
+      {
+        accounts: {
+          multisig,
+          transaction: transaction.publicKey,
+          proposer: multisigClient.provider.wallet.publicKey,
+          rent: SYSVAR_RENT_PUBKEY,
+        },
+        signers: [transaction],
+        instructions: [
+          await multisigClient.account.transaction.createInstruction(
+            transaction,
+            // @ts-ignore
+            txSize
+          ),
+        ],
+      }
+    );
+    enqueueSnackbar("Transaction created", {
+      variant: "success",
+      action: <ViewTransactionOnExplorerButton signature={tx} />,
+    });
+    didAddTransaction(transaction.publicKey);
+    onClose();
+  };
+  return (
+    <div
+      style={{
+        background: "#f1f0f0",
+        paddingLeft: "24px",
+        paddingRight: "24px",
+      }}
+    >
+      <TextField
+        fullWidth
+        style={{ marginTop: "16px" }}
+        label="Buffer or Program Data Account"
+        value={bufferAccount}
+        onChange={(e) => {
+          setBufferAccount(new PublicKey(e.target.value as string));
+        }}
+      />
+      <TextField
+        fullWidth
+        style={{ marginTop: "16px" }}
+        label="New Authority"
+        value={newAuthority}
+        onChange={(e) => {
+          setNewAuthority(new PublicKey(e.target.value as string));
+        }}
+      />
+      <div style={{ display: "flex", justifyContent: "flex-end" }}>
+        <Button onClick={() => setAuthority()}>Set Authority</Button>
+      </div>
+    </div>
   );
 }
 
@@ -1220,7 +1370,7 @@ function UpgradeProgramListItemDetails({
     const programAddr = new PublicKey(programId as string);
     const bufferAddr = new PublicKey(buffer as string);
     // Hard code serialization.
-    const data = Buffer.from([3, 0, 0, 0]);
+    const data = upgradeData();
 
     const programAccount = await (async () => {
       const programAccount = await multisigClient.provider.connection.getAccountInfo(
@@ -1324,7 +1474,11 @@ function UpgradeProgramListItemDetails({
 // @ts-ignore
 function icon(tx, multisigClient) {
   if (tx.account.programId.equals(BPF_LOADER_UPGRADEABLE_PID)) {
-    return <BuildIcon />;
+    if (tx.account.data[0] === 3) {
+      return <BuildIcon />;
+    } else if (tx.account.data[0] === 4) {
+      return <FaceIcon />;
+    }
   }
   if (tx.account.programId.equals(multisigClient.programId)) {
     const setThresholdSighash = multisigClient.coder.sighash(
@@ -1360,4 +1514,12 @@ function setOwnersData(multisigClient, owners) {
   return multisigClient.coder.instruction.encode("set_owners", {
     owners,
   });
+}
+
+function setAuthorityData(): Buffer {
+  return Buffer.from([4, 0, 0, 0]);
+}
+
+function upgradeData(): Buffer {
+  return Buffer.from([3, 0, 0, 0]);
 }
