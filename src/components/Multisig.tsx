@@ -106,7 +106,7 @@ export function MultisigInstance({ multisig }: { multisig: PublicKey }) {
   const [forceRefresh, setForceRefresh] = useState(false);
   useEffect(() => {
     multisigClient.account
-      .multisig(multisig)
+      .multisig.fetch(multisig)
       .then((account: any) => {
         setMultisigAccount(account);
       })
@@ -241,7 +241,7 @@ export function NewMultisigDialog({
   const { enqueueSnackbar } = useSnackbar();
   const [threshold, setThreshold] = useState(2);
   // @ts-ignore
-  const zeroAddr = new PublicKey().toString();
+  const zeroAddr = new PublicKey("11111111111111111111111111111111").toString();
   const [participants, setParticipants] = useState([zeroAddr]);
   const _onClose = () => {
     onClose();
@@ -334,7 +334,7 @@ export function NewMultisigDialog({
             onClick={() => {
               const p = [...participants];
               // @ts-ignore
-              p.push(new PublicKey().toString());
+              p.push(new PublicKey("11111111111111111111111111111111").toString());
               setParticipants(p);
             }}
           >
@@ -929,7 +929,7 @@ function SetOwnersListItemDetails({
 }) {
   const { multisigClient } = useWallet();
   // @ts-ignore
-  const zeroAddr = new PublicKey().toString();
+  const zeroAddr = new PublicKey("11111111111111111111111111111111").toString();
   const [participants, setParticipants] = useState([zeroAddr]);
   const { enqueueSnackbar } = useSnackbar();
   const setOwners = async () => {
@@ -1010,7 +1010,7 @@ function SetOwnersListItemDetails({
           onClick={() => {
             const p = [...participants];
             // @ts-ignore
-            p.push(new PublicKey().toString());
+            p.push(new PublicKey("11111111111111111111111111111111").toString());
             setParticipants(p);
           }}
         >
@@ -1081,7 +1081,7 @@ function UpgradeIdlListItemDetails({
     });
     const programAddr = new PublicKey(programId as string);
     const bufferAddr = new PublicKey(buffer as string);
-    const idlAddr = await anchor.utils.idlAddress(programAddr);
+    const idlAddr = await idlAddress(programAddr);
     const [multisigSigner] = await PublicKey.findProgramAddress(
       [multisig.toBuffer()],
       multisigClient.programId
@@ -1361,3 +1361,17 @@ function setOwnersData(multisigClient, owners) {
     owners,
   });
 }
+
+
+// Deterministic IDL address as a function of the program id.
+async function idlAddress(programId: PublicKey): Promise<PublicKey> {
+  const base = (await PublicKey.findProgramAddress([], programId))[0];
+  return await PublicKey.createWithSeed(base, seed(), programId);
+}
+
+// Seed for generating the idlAddress.
+function seed(): string {
+  return "anchor:idl";
+}
+
+// The 

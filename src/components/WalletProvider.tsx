@@ -9,8 +9,7 @@ import { useSelector } from "react-redux";
 import { Connection, ConfirmOptions } from "@solana/web3.js";
 // @ts-ignore
 import Wallet from "@project-serum/sol-wallet-adapter";
-import { Provider } from "@project-serum/common";
-import { Program } from "@project-serum/anchor";
+import { Program, Provider } from "@project-serum/anchor";
 import { State as StoreState } from "../store/reducer";
 import MultisigIdl from "../idl";
 
