@@ -58,7 +58,7 @@ export const networks: Networks = {
     url: "https://solana-api.projectserum.com",
     explorerClusterSuffix: "",
     multisigProgramId: new PublicKey(
-      "A9HAbnCwoD6f2NkZobKFf6buJoN9gUVVvX5PoUnDHS6u"
+      "msigmtwzgXJHj2ext4XJjCDmpbcMuufFb5cHuwg6Xdt"
     ),
     multisigUpgradeAuthority: new PublicKey(
       "3uztpEgUmvirDBYRXgDamUDZiU5EcgTwArQ2pULtHJPC"
