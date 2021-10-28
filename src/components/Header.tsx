@@ -17,11 +17,12 @@ import BubbleChartIcon from "@material-ui/icons/BubbleChart";
 import SearchIcon from "@material-ui/icons/Search";
 import { PublicKey } from "@solana/web3.js";
 import { networks, State as StoreState, ActionType } from "../store/reducer";
-import { useWallet } from "@solana/wallet-adapter-react";
-import { useProgram } from "./WalletProvider";
+import { useAnchorWallet, useWallet, WalletProvider } from "@solana/wallet-adapter-react";
+import DisconnectIcon from '@material-ui/icons/LinkOff';
+import { WalletDisconnectButton, WalletMultiButton } from "@solana/wallet-adapter-material-ui";
 
 export default function Header() {
-  const { wallet } = useWallet();
+  const wallet  = useAnchorWallet();
   const history = useHistory();
   const [multisigAddress, setMultisigAddress] = useState("");
   const disabled = !isValidPubkey(multisigAddress);
@@ -93,15 +94,8 @@ export default function Header() {
             }}
           >
             <NetworkSelector />
-            {!wallet.publicKey ? (
-              <WalletConnectButton
-                style={{
-                  display: wallet.publicKey ? "none" : "",
-                }}
-              />
-            ) : (
-              <UserSelector />
-            )}
+            <WalletMultiButton />
+            {wallet && <WalletDisconnectButton startIcon={<DisconnectIcon />} style={{ marginLeft: 8 }} />}
           </div>
         </div>
       </Toolbar>
@@ -240,104 +234,10 @@ function NetworkSelector() {
   );
 }
 
-function UserSelector() {
-  const { wallet } = useWallet();
-
-  return (
-    <Select
-      displayEmpty
-      renderValue={() => {
-        return (
-          <Typography style={{ overflow: "hidden" }}>
-            {wallet.publicKey.toString()}
-          </Typography>
-        );
-      }}
-      style={{
-        marginLeft: "12px",
-        width: "150px",
-      }}
-      onChange={(e) => {
-        if (e.target.value === "disconnect") {
-          wallet.disconnect();
-        }
-      }}
-    >
-      <MenuItem value="disconnect">
-        <IconButton color="inherit">
-          <ExitToAppIcon />
-          <Typography style={{ marginLeft: "15px" }}>Disconnect</Typography>
-        </IconButton>
-      </MenuItem>
-    </Select>
-  );
-}
 
 type WalletConnectButtonProps = {
   style?: any;
 };
-
-export function WalletConnectButton(
-  props: WalletConnectButtonProps
-): ReactElement {
-  const { showDisconnect } = useSelector((state: StoreState) => {
-    return {
-      showDisconnect: state.common.isWalletConnected,
-    };
-  });
-  const dispatch = useDispatch();
-  const { wallet } = useWallet();
-  const {multisigClient} = useProgram();
-  const { enqueueSnackbar } = useSnackbar();
-
-  // Wallet connection event listeners.
-  useEffect(() => {
-    wallet.on("disconnect", () => {
-      enqueueSnackbar("Disconnected from wallet", {
-        variant: "info",
-        autoHideDuration: 2500,
-      });
-      dispatch({
-        type: ActionType.CommonWalletDidDisconnect,
-        item: {},
-      });
-      dispatch({
-        type: ActionType.CommonTriggerShutdown,
-        item: {},
-      });
-    });
-    wallet.on("connect", async () => {
-      dispatch({
-        type: ActionType.CommonWalletDidConnect,
-        item: {},
-      });
-    });
-  }, [wallet, dispatch, enqueueSnackbar, multisigClient.provider.connection]);
-
-  return showDisconnect ? (
-    <Button
-      style={props.style}
-      color="inherit"
-      onClick={() => wallet.disconnect()}
-    >
-      <ExitToAppIcon />
-      <Typography style={{ marginLeft: "5px", fontSize: "15px" }}>
-        Disconnect
-      </Typography>
-    </Button>
-  ) : (
-    <Button
-      style={props.style}
-      color="inherit"
-      onClick={() => wallet.connect()}
-    >
-      <PersonIcon />
-      <Typography style={{ marginLeft: "5px", fontSize: "15px" }}>
-        Connect wallet
-      </Typography>
-    </Button>
-  );
-}
 
 function isValidPubkey(addr: string): boolean {
   try {

@@ -25,7 +25,7 @@ export function useProgram(): ProgramContextValue {
 const ProgramContext = React.createContext<null | ProgramContextValue>(null);
 
 type ProgramContextValue = {
-  multisigClient: Program;
+  multisigClient: Program | null;
 };
 
 export default function ProgramProvider(
@@ -36,12 +36,13 @@ export default function ProgramProvider(
       network: state.common.network,
     };
   });
-  const wallet = useAnchorWallet();
-  if (!wallet) {
-    throw new Error('wallet undefined')
-  }
+  let wallet = useAnchorWallet();
 
   const { multisigClient } = useMemo(() => {
+    if (!wallet) {
+      return {multisigClient: null}
+    }
+
     const opts: ConfirmOptions = {
       preflightCommitment: "recent",
       commitment: "recent",
