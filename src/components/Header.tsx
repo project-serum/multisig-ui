@@ -17,7 +17,8 @@ import BubbleChartIcon from "@material-ui/icons/BubbleChart";
 import SearchIcon from "@material-ui/icons/Search";
 import { PublicKey } from "@solana/web3.js";
 import { networks, State as StoreState, ActionType } from "../store/reducer";
-import { useWallet } from "./WalletProvider";
+import { useWallet } from "@solana/wallet-adapter-react";
+import { useProgram } from "./WalletProvider";
 
 export default function Header() {
   const { wallet } = useWallet();
@@ -285,7 +286,8 @@ export function WalletConnectButton(
     };
   });
   const dispatch = useDispatch();
-  const { wallet, multisigClient } = useWallet();
+  const { wallet } = useWallet();
+  const {multisigClient} = useProgram();
   const { enqueueSnackbar } = useSnackbar();
 
   // Wallet connection event listeners.

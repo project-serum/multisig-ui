@@ -8,13 +8,13 @@ import React, {
 import { useSelector } from "react-redux";
 import { Connection, ConfirmOptions } from "@solana/web3.js";
 // @ts-ignore
-import Wallet from "@project-serum/sol-wallet-adapter";
-import { Program, Provider } from "@project-serum/anchor";
+import { Program, Provider, Wallet } from "@project-serum/anchor";
 import { State as StoreState } from "../store/reducer";
+import { useAnchorWallet } from '@solana/wallet-adapter-react';
 import MultisigIdl from "../idl";
 
-export function useWallet(): WalletContextValues {
-  const w = useContext(WalletContext);
+export function useProgram(): ProgramContextValue {
+  const w = useContext(ProgramContext);
   if (!w) {
     throw new Error("Missing wallet context");
   }
@@ -22,30 +22,31 @@ export function useWallet(): WalletContextValues {
   return w;
 }
 
-const WalletContext = React.createContext<null | WalletContextValues>(null);
+const ProgramContext = React.createContext<null | ProgramContextValue>(null);
 
-type WalletContextValues = {
-  wallet: Wallet;
+type ProgramContextValue = {
   multisigClient: Program;
 };
 
-export default function WalletProvider(
+export default function ProgramProvider(
   props: PropsWithChildren<ReactNode>
 ): ReactElement {
-  const { walletProvider, network } = useSelector((state: StoreState) => {
+  const { network } = useSelector((state: StoreState) => {
     return {
-      walletProvider: state.common.walletProvider,
       network: state.common.network,
     };
   });
+  const wallet = useAnchorWallet();
+  if (!wallet) {
+    throw new Error('wallet undefined')
+  }
 
-  const { wallet, multisigClient } = useMemo(() => {
+  const { multisigClient } = useMemo(() => {
     const opts: ConfirmOptions = {
       preflightCommitment: "recent",
       commitment: "recent",
     };
     const connection = new Connection(network.url, opts.preflightCommitment);
-    const wallet = new Wallet(walletProvider, network.url);
     const provider = new Provider(connection, wallet, opts);
 
     const multisigClient = new Program(
@@ -55,14 +56,13 @@ export default function WalletProvider(
     );
 
     return {
-      wallet,
       multisigClient,
     };
-  }, [walletProvider, network]);
+  }, [network]);
 
   return (
-    <WalletContext.Provider value={{ wallet, multisigClient }}>
+    <ProgramContext.Provider value={{ multisigClient }}>
       {props.children}
-    </WalletContext.Provider>
+    </ProgramContext.Provider>
   );
 }
