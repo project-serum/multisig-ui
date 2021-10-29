@@ -1,23 +1,17 @@
-import React, { useState, useEffect, ReactElement } from "react";
-import { useSelector, useDispatch } from "react-redux";
+import React, { useState } from "react";
 import { useHistory } from "react-router-dom";
-import { useSnackbar } from "notistack";
 import AppBar from "@material-ui/core/AppBar";
 import Toolbar from "@material-ui/core/Toolbar";
-import Select from "@material-ui/core/Select";
 import Menu from "@material-ui/core/Menu";
 import Link from "@material-ui/core/Link";
 import Typography from "@material-ui/core/Typography";
 import MenuItem from "@material-ui/core/MenuItem";
 import IconButton from "@material-ui/core/IconButton";
-import ExitToAppIcon from "@material-ui/icons/ExitToApp";
 import Button from "@material-ui/core/Button";
-import PersonIcon from "@material-ui/icons/Person";
 import BubbleChartIcon from "@material-ui/icons/BubbleChart";
 import SearchIcon from "@material-ui/icons/Search";
 import { PublicKey } from "@solana/web3.js";
-import { networks, State as StoreState, ActionType } from "../store/reducer";
-import { useAnchorWallet, useWallet, WalletProvider } from "@solana/wallet-adapter-react";
+import { useAnchorWallet, useConnection } from "@solana/wallet-adapter-react";
 import DisconnectIcon from '@material-ui/icons/LinkOff';
 import { WalletDisconnectButton, WalletMultiButton } from "@solana/wallet-adapter-material-ui";
 
@@ -169,11 +163,9 @@ function BarButton(props: BarButtonProps) {
 }
 
 function NetworkSelector() {
-  const network = useSelector((state: StoreState) => {
-    return state.common.network;
-  });
-  const dispatch = useDispatch();
   const [anchorEl, setAnchorEl] = useState(null);
+  const networks = [{"label": "mainnet-beta"}, {"label": "devnet"}]
+  const {connection} = useConnection();
 
   const handleClose = () => {
     setAnchorEl(null);
@@ -200,7 +192,7 @@ function NetworkSelector() {
       >
         <BubbleChartIcon />
         <Typography style={{ marginLeft: "5px", fontSize: "15px" }}>
-          {network.label}
+          {networks[0].label}
         </Typography>
       </Button>
       <Menu
@@ -217,13 +209,6 @@ function NetworkSelector() {
             key={n}
             onClick={() => {
               handleClose();
-              dispatch({
-                type: ActionType.CommonSetNetwork,
-                item: {
-                  network: networks[n],
-                  networkKey: n,
-                },
-              });
             }}
           >
             <Typography>{networks[n].label}</Typography>

@@ -7,12 +7,10 @@ import { MuiThemeProvider } from "@material-ui/core/styles";
 import CssBaseline from "@material-ui/core/CssBaseline";
 import { unstable_createMuiStrictModeTheme as createMuiTheme } from "@material-ui/core/styles";
 import { PublicKey } from "@solana/web3.js";
-import { store } from "./store";
 import Layout from "./components/Layout";
 import Multisig from "./components/Multisig";
-import { networks } from "./store/reducer";
 import { WalletDialogProvider } from "@solana/wallet-adapter-material-ui";
-import { WalletProvider } from "@solana/wallet-adapter-react";
+import { ConnectionProvider, WalletProvider } from "@solana/wallet-adapter-react";
 import {
   getLedgerWallet,
   getMathWallet,
@@ -54,10 +52,10 @@ function App() {
   );
 
   return (
-    <Provider store={store}>
-      <MuiThemeProvider theme={theme}>
-        <CssBaseline />
-        <SnackbarProvider maxSnack={5} autoHideDuration={8000}>
+    <MuiThemeProvider theme={theme}>
+      <CssBaseline />
+      <SnackbarProvider maxSnack={5} autoHideDuration={8000}>
+        <ConnectionProvider endpoint={"mainnet-beta"}>
           <WalletProvider wallets={wallets} autoConnect>
               <WalletDialogProvider>
                 <HashRouter basename={"/"}>
@@ -72,18 +70,14 @@ function App() {
                 </HashRouter>
               </WalletDialogProvider>
           </WalletProvider>
-        </SnackbarProvider>
-      </MuiThemeProvider>
-    </Provider>
+        </ConnectionProvider>
+      </SnackbarProvider>
+    </MuiThemeProvider>
   );
 }
 
 function MultisigPage() {
-  const { hash } = window.location;
-  if (hash) {
-    window.location.href = `/#/${networks.mainnet.multisigUpgradeAuthority!.toString()}`;
-  }
-  const multisig = networks.mainnet.multisigUpgradeAuthority;
+  const multisig = new PublicKey("6ExGdhoUeqzExzXWx1tW2RPojuRnfXeTRwQ7sCeEcnKy");
   return <Multisig multisig={multisig} />;
 }
 
