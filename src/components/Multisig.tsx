@@ -103,7 +103,7 @@ export function MultisigInstance({ multisig }: { multisig: PublicKey }) {
   );
   const [forceRefresh, setForceRefresh] = useState(false);
   useEffect(() => {
-    multisigClient?.account
+    multisigClient.account
       .multisig.fetch(multisig)
       .then((account: any) => {
         setMultisigAccount(account);
@@ -112,14 +112,14 @@ export function MultisigInstance({ multisig }: { multisig: PublicKey }) {
         console.error(err);
         setMultisigAccount(null);
       });
-  }, [multisig, multisigClient?.account]);
+  }, [multisig, multisigClient.account]);
   useEffect(() => {
-    multisigClient?.account.transaction.all(multisig.toBuffer()).then((txs) => {
+    multisigClient.account.transaction.all(multisig.toBuffer()).then((txs) => {
       setTransactions(txs);
     });
-  }, [multisigClient?.account.transaction, multisig, forceRefresh]);
+  }, [multisigClient.account.transaction, multisig, forceRefresh]);
   useEffect(() => {
-    multisigClient?.account.multisig
+    multisigClient.account.multisig
       .subscribe(multisig)
       .on("change", (account) => {
         setMultisigAccount(account);
@@ -249,10 +249,6 @@ export function NewMultisigDialog({
   const [maxParticipantLength, setMaxParticipantLength] = useState(10);
   const disableCreate = maxParticipantLength < participants.length;
   const createMultisig = async () => {
-    if (!multisigClient) {
-      return;
-    }
-
     enqueueSnackbar("Creating multisig", {
       variant: "info",
     });
@@ -270,7 +266,7 @@ export function NewMultisigDialog({
       multisigClient.programId
     );
     const owners = participants.map((p) => new PublicKey(p));
-    const tx = await multisigClient?.rpc.createMultisig(
+    const tx = await multisigClient.rpc.createMultisig(
       owners,
       new BN(threshold),
       nonce,
@@ -381,7 +377,7 @@ function TxListItem({
   const [open, setOpen] = useState(false);
   const [txAccount, setTxAccount] = useState(tx.account);
   useEffect(() => {
-    multisigClient?.account.transaction
+    multisigClient.account.transaction
       .subscribe(tx.publicKey)
       .on("change", (account) => {
         setTxAccount(account);
@@ -438,11 +434,11 @@ function TxListItem({
     enqueueSnackbar("Approving transaction", {
       variant: "info",
     });
-    await multisigClient?.rpc.approve({
+    await multisigClient.rpc.approve({
       accounts: {
         multisig,
         transaction: tx.publicKey,
-        owner: multisigClient?.provider.wallet.publicKey,
+        owner: multisigClient.provider.wallet.publicKey,
       },
     });
     enqueueSnackbar("Transaction approved", {
@@ -450,10 +446,6 @@ function TxListItem({
     });
   };
   const execute = async () => {
-    if (!multisigClient) {
-      return;
-    }
-
     enqueueSnackbar("Executing transaction", {
       variant: "info",
     });
@@ -678,15 +670,11 @@ function SignerDialog({
   const multisigClient = useProgram();
   const [signer, setSigner] = useState<null | string>(null);
   useEffect(() => {
-    if (!multisigClient) {
-      return;
-    }
-
     PublicKey.findProgramAddress(
       [multisig.toBuffer()],
       multisigClient.programId
     ).then((addrNonce) => setSigner(addrNonce[0].toString()));
-  }, [multisig, multisigClient?.programId, setSigner, multisigClient]);
+  }, [multisig, multisigClient.programId, setSigner, multisigClient]);
   return (
     <Dialog open={open} fullWidth onClose={onClose} maxWidth="md">
       <DialogTitle>
@@ -816,10 +804,6 @@ function ChangeThresholdListItemDetails({
   // @ts-ignore
   const { enqueueSnackbar } = useSnackbar();
   const changeThreshold = async () => {
-    if (!multisigClient) {
-      return;
-    }
-
     enqueueSnackbar("Creating change threshold transaction", {
       variant: "info",
     });
@@ -941,9 +925,6 @@ function SetOwnersListItemDetails({
   const [participants, setParticipants] = useState([zeroAddr]);
   const { enqueueSnackbar } = useSnackbar();
   const setOwners = async () => {
-    if (!multisigClient) {
-      return;
-    }
     enqueueSnackbar("Creating setOwners transaction", {
       variant: "info",
     });
@@ -967,8 +948,8 @@ function SetOwnersListItemDetails({
     ];
     const transaction = new Account();
     const txSize = 5000; // TODO: tighter bound.
-    const tx = await multisigClient?.rpc.createTransaction(
-      multisigClient?.programId,
+    const tx = await multisigClient.rpc.createTransaction(
+      multisigClient.programId,
       accounts,
       data,
       {
@@ -1091,9 +1072,6 @@ function UpgradeIdlListItemDetails({
   const multisigClient = useProgram();
   const { enqueueSnackbar } = useSnackbar();
   const createTransactionAccount = async () => {
-    if (!multisigClient) {
-      return;
-    }
     enqueueSnackbar("Creating transaction", {
       variant: "info",
     });
@@ -1232,10 +1210,6 @@ function UpgradeProgramListItemDetails({
   const multisigClient = useProgram();
   const { enqueueSnackbar } = useSnackbar();
   const createTransactionAccount = async () => {
-    if (!multisigClient) {
-      return;
-    }
-
     enqueueSnackbar("Creating transaction", {
       variant: "info",
     });
