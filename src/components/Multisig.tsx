@@ -51,6 +51,7 @@ import {
 import { ViewTransactionOnExplorerButton } from "./Notification";
 import * as idl from "../utils/idl";
 import { useMultisigProgram } from "../hooks/useMultisigProgram";
+import { useWallet } from "@solana/wallet-adapter-react";
 
 export default function Multisig({ multisig }: { multisig?: PublicKey }) {
   return (
@@ -217,6 +218,7 @@ export function MultisigInstance({ multisig }: { multisig: PublicKey }) {
       />
       {multisigAccount && (
         <SignerDialog
+          key={multisigClient.provider.wallet.publicKey.toString()}
           multisig={multisig}
           multisigAccount={multisigAccount}
           open={showSignerDialog}
@@ -537,8 +539,8 @@ function TxListItem({
                 <TableBody>
                   {rows.map((r) => (
                     <TableRow>
-                      <TableCell>{r.field}</TableCell>
-                      <TableCell align="right">{r.value}</TableCell>
+                      <TableCell key={r.field}>{r.field}</TableCell>
+                      <TableCell align="right" key={`${r.field}-value`}>{r.value}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -695,7 +697,7 @@ function SignerDialog({
           </TableHead>
           <TableBody>
             {multisigAccount.owners.map((r: any) => (
-              <TableRow>
+              <TableRow key={r.toString()}>
                 <TableCell>{r.toString()}</TableCell>
               </TableRow>
             ))}
