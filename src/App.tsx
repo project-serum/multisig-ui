@@ -19,7 +19,7 @@ import {
   getSolongWallet,
   getTorusWallet,
 } from '@solana/wallet-adapter-wallets';
-import { ConnectionProvider } from "./connection";
+import { ConnectionProvider } from "./context/connection";
 
 function App() {
   const theme = createMuiTheme({

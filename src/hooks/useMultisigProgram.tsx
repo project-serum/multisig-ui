@@ -3,9 +3,9 @@ import { ConfirmOptions, Keypair } from "@solana/web3.js";
 import { useAnchorWallet } from "@solana/wallet-adapter-react";
 import { useMemo } from "react";
 import MultisigIdl from "../idl";
-import { useConnection } from "../connection";
+import { useConnection } from "../context/connection";
 
-export function useProgram(): Program {
+export function useMultisigProgram(): Program {
   const wallet = useAnchorWallet();
   const connection = useConnection();
 

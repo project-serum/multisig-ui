@@ -50,7 +50,7 @@ import {
 } from "@solana/web3.js";
 import { ViewTransactionOnExplorerButton } from "./Notification";
 import * as idl from "../utils/idl";
-import { useProgram } from "../hooks/useProgram";
+import { useMultisigProgram } from "../hooks/useMultisigProgram";
 
 export default function Multisig({ multisig }: { multisig?: PublicKey }) {
   return (
@@ -94,7 +94,7 @@ function NewMultisigButton() {
 }
 
 export function MultisigInstance({ multisig }: { multisig: PublicKey }) {
-  const multisigClient = useProgram();
+  const multisigClient = useMultisigProgram();
   const [multisigAccount, setMultisigAccount] = useState<any>(undefined);
   const [transactions, setTransactions] = useState<any>(null);
   const [showSignerDialog, setShowSignerDialog] = useState(false);
@@ -235,7 +235,7 @@ export function NewMultisigDialog({
   onClose: () => void;
 }) {
   const history = useHistory();
-  const multisigClient = useProgram();
+  const multisigClient = useMultisigProgram();
   const { enqueueSnackbar } = useSnackbar();
   const [threshold, setThreshold] = useState(2);
   // @ts-ignore
@@ -373,7 +373,7 @@ function TxListItem({
   tx: any;
 }) {
   const { enqueueSnackbar } = useSnackbar();
-  const multisigClient = useProgram();
+  const multisigClient = useMultisigProgram();
   const [open, setOpen] = useState(false);
   const [txAccount, setTxAccount] = useState(tx.account);
   useEffect(() => {
@@ -667,7 +667,7 @@ function SignerDialog({
   open: boolean;
   onClose: () => void;
 }) {
-  const multisigClient = useProgram();
+  const multisigClient = useMultisigProgram();
   const [signer, setSigner] = useState<null | string>(null);
   useEffect(() => {
     PublicKey.findProgramAddress(
@@ -800,7 +800,7 @@ function ChangeThresholdListItemDetails({
   didAddTransaction: (tx: PublicKey) => void;
 }) {
   const [threshold, setThreshold] = useState(2);
-  const multisigClient = useProgram();
+  const multisigClient = useMultisigProgram();
   // @ts-ignore
   const { enqueueSnackbar } = useSnackbar();
   const changeThreshold = async () => {
@@ -919,7 +919,7 @@ function SetOwnersListItemDetails({
   onClose: Function;
   didAddTransaction: (tx: PublicKey) => void;
 }) {
-  const multisigClient = useProgram();
+  const multisigClient = useMultisigProgram();
   // @ts-ignore
   const zeroAddr = new PublicKey("11111111111111111111111111111111").toString();
   const [participants, setParticipants] = useState([zeroAddr]);
@@ -1069,7 +1069,7 @@ function UpgradeIdlListItemDetails({
   const [programId, setProgramId] = useState<null | string>(null);
   const [buffer, setBuffer] = useState<null | string>(null);
 
-  const multisigClient = useProgram();
+  const multisigClient = useMultisigProgram();
   const { enqueueSnackbar } = useSnackbar();
   const createTransactionAccount = async () => {
     enqueueSnackbar("Creating transaction", {
@@ -1207,7 +1207,7 @@ function UpgradeProgramListItemDetails({
   const [programId, setProgramId] = useState<null | string>(null);
   const [buffer, setBuffer] = useState<null | string>(null);
 
-  const multisigClient = useProgram();
+  const multisigClient = useMultisigProgram();
   const { enqueueSnackbar } = useSnackbar();
   const createTransactionAccount = async () => {
     enqueueSnackbar("Creating transaction", {

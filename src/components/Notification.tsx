@@ -1,7 +1,7 @@
 import React from "react";
 import Button from "@material-ui/core/Button";
 import { TransactionSignature } from "@solana/web3.js";
-import { useConnectionConfig } from "../connection";
+import { useConnectionConfig } from "../context/connection";
 
 type Props = {
   signature: string;

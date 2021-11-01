@@ -1,11 +1,11 @@
-import { useLocalStorageState } from "./utils/utils";
+import { useLocalStorageState } from "../utils/utils";
 import {
   Keypair,
   clusterApiUrl,
   Connection,
 } from "@solana/web3.js";
 import React, { useContext, useEffect, useMemo } from "react";
-import { setProgramIds } from "./utils/ids";
+import { setProgramIds } from "../utils/ids";
 import { ENV as ChainID } from "@solana/spl-token-registry";
 
 export type ENV =

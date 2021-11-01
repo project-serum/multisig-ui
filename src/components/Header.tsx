@@ -14,7 +14,7 @@ import { PublicKey } from "@solana/web3.js";
 import { useAnchorWallet } from "@solana/wallet-adapter-react";
 import DisconnectIcon from '@material-ui/icons/LinkOff';
 import { WalletDisconnectButton, WalletMultiButton } from "@solana/wallet-adapter-material-ui";
-import { ENDPOINTS, useConnectionConfig } from "../connection";
+import { ENDPOINTS, useConnectionConfig } from "../context/connection";
 
 export default function Header() {
   const wallet  = useAnchorWallet();
