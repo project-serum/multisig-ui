@@ -11,9 +11,10 @@ import Button from "@material-ui/core/Button";
 import BubbleChartIcon from "@material-ui/icons/BubbleChart";
 import SearchIcon from "@material-ui/icons/Search";
 import { PublicKey } from "@solana/web3.js";
-import { useAnchorWallet, useConnection } from "@solana/wallet-adapter-react";
+import { useAnchorWallet } from "@solana/wallet-adapter-react";
 import DisconnectIcon from '@material-ui/icons/LinkOff';
 import { WalletDisconnectButton, WalletMultiButton } from "@solana/wallet-adapter-material-ui";
+import { ENDPOINTS, useConnectionConfig } from "../connection";
 
 export default function Header() {
   const wallet  = useAnchorWallet();
@@ -41,14 +42,7 @@ export default function Header() {
           }}
         >
           <div style={{ display: "flex", flex: 1 }}>
-            <SerumLogoButton />
             <BarButton label="Multisig" hrefClient="/" />
-            <BarButton label="Trade" href="https://dex.projectserum.com" />
-            <BarButton label="Stake" href="https://stake.projectserum.com" />
-            <BarButton
-              label="Lockup"
-              href="https://stake.projectserum.com/#/lockup"
-            />
             <div
               style={{
                 marginLeft: "16px",
@@ -164,8 +158,7 @@ function BarButton(props: BarButtonProps) {
 
 function NetworkSelector() {
   const [anchorEl, setAnchorEl] = useState(null);
-  const networks = [{"label": "mainnet-beta"}, {"label": "devnet"}]
-  const {connection} = useConnection();
+  const {env, setEndpoint} = useConnectionConfig();
 
   const handleClose = () => {
     setAnchorEl(null);
@@ -192,7 +185,7 @@ function NetworkSelector() {
       >
         <BubbleChartIcon />
         <Typography style={{ marginLeft: "5px", fontSize: "15px" }}>
-          {networks[0].label}
+          {env.toString()}
         </Typography>
       </Button>
       <Menu
@@ -204,25 +197,23 @@ function NetworkSelector() {
           color: "white",
         }}
       >
-        {Object.keys(networks).map((n: string) => (
-          <MenuItem
-            key={n}
+        {ENDPOINTS.map(endpoint => {
+          return (
+            <MenuItem
+            key={endpoint.name.toString()}
             onClick={() => {
               handleClose();
+              setEndpoint(endpoint.endpoint);
             }}
           >
-            <Typography>{networks[n].label}</Typography>
+            <Typography>{endpoint.name}</Typography>
           </MenuItem>
-        ))}
+          )
+        })}
       </Menu>
     </div>
   );
 }
-
-
-type WalletConnectButtonProps = {
-  style?: any;
-};
 
 function isValidPubkey(addr: string): boolean {
   try {

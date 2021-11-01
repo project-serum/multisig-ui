@@ -686,7 +686,7 @@ function SignerDialog({
       [multisig.toBuffer()],
       multisigClient.programId
     ).then((addrNonce) => setSigner(addrNonce[0].toString()));
-  }, [multisig, multisigClient?.programId, setSigner]);
+  }, [multisig, multisigClient?.programId, setSigner, multisigClient]);
   return (
     <Dialog open={open} fullWidth onClose={onClose} maxWidth="md">
       <DialogTitle>

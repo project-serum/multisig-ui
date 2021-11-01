@@ -1,8 +1,7 @@
-import React, { useCallback, useMemo } from "react";
-import { Provider } from "react-redux";
+import React, { useMemo } from "react";
 import { useHistory, useLocation } from "react-router";
 import { HashRouter, Route } from "react-router-dom";
-import { SnackbarProvider, useSnackbar } from "notistack";
+import { SnackbarProvider } from "notistack";
 import { MuiThemeProvider } from "@material-ui/core/styles";
 import CssBaseline from "@material-ui/core/CssBaseline";
 import { unstable_createMuiStrictModeTheme as createMuiTheme } from "@material-ui/core/styles";
@@ -10,7 +9,7 @@ import { PublicKey } from "@solana/web3.js";
 import Layout from "./components/Layout";
 import Multisig from "./components/Multisig";
 import { WalletDialogProvider } from "@solana/wallet-adapter-material-ui";
-import { ConnectionProvider, WalletProvider } from "@solana/wallet-adapter-react";
+import { WalletProvider } from "@solana/wallet-adapter-react";
 import {
   getLedgerWallet,
   getMathWallet,
@@ -20,7 +19,7 @@ import {
   getSolongWallet,
   getTorusWallet,
 } from '@solana/wallet-adapter-wallets';
-import { WalletError } from "@solana/wallet-adapter-base";
+import { ConnectionProvider } from "./connection";
 
 function App() {
   const theme = createMuiTheme({
@@ -55,7 +54,7 @@ function App() {
     <MuiThemeProvider theme={theme}>
       <CssBaseline />
       <SnackbarProvider maxSnack={5} autoHideDuration={8000}>
-        <ConnectionProvider endpoint={"mainnet-beta"}>
+        <ConnectionProvider>
           <WalletProvider wallets={wallets} autoConnect>
               <WalletDialogProvider>
                 <HashRouter basename={"/"}>
