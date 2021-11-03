@@ -77,7 +77,7 @@ function App() {
 }
 
 function MultisigPage() {
-  const multisig = new PublicKey("6ExGdhoUeqzExzXWx1tW2RPojuRnfXeTRwQ7sCeEcnKy");
+  const multisig = new PublicKey("3uztpEgUmvirDBYRXgDamUDZiU5EcgTwArQ2pULtHJPC");
   return <Multisig multisig={multisig} />;
 }
 
