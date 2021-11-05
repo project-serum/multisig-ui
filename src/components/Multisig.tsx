@@ -44,6 +44,7 @@ import CheckCircleIcon from "@material-ui/icons/CheckCircle";
 import BN from "bn.js";
 import {
   Account,
+  Keypair,
   PublicKey,
   SYSVAR_RENT_PUBKEY,
   SYSVAR_CLOCK_PUBKEY,
@@ -53,6 +54,8 @@ import { useWallet } from "./WalletProvider";
 import { ViewTransactionOnExplorerButton } from "./Notification";
 import * as idl from "../utils/idl";
 import { networks } from "../store/reducer";
+import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { createMint, createTokenAccount } from "../utils/uxd_helper";
 
 export default function Multisig({ multisig }: { multisig?: PublicKey }) {
   return (
@@ -257,7 +260,7 @@ export function NewMultisigDialog({
     const multisig = new Account();
     // Disc. + threshold + nonce.
     const baseSize = 8 + 8 + 1 + 4;
-    // Add enough for 2 more participants, in case the user changes one's
+    // Add enough for 2 more participants, in case the user changes one"s
     /// mind later.
     const fudge = 64;
     // Can only grow the participant set by 2x the initialized value.
@@ -767,10 +770,45 @@ function AddTransactionDialog({
             multisig={multisig}
             onClose={onClose}
           />
+          <WithdrawUSDCPoolListItem
+            didAddTransaction={didAddTransaction}
+            multisig={multisig}
+            onClose={onClose}
+          />
         </List>
       </DialogContent>
     </Dialog>
   );
+}
+
+function WithdrawUSDCPoolListItem({
+    multisig,
+    onClose,
+    didAddTransaction,
+}: {
+    multisig: PublicKey;
+    onClose: Function;
+    didAddTransaction: (tx: PublicKey) => void;
+}) {
+    const [open, setOpen] = useState(false);
+    return (
+        <>
+            <ListItem button onClick={() => setOpen((open) => !open)}>
+                <ListItemIcon>
+                    <BuildIcon />
+                </ListItemIcon>
+                <ListItemText primary={"Withdraw USDC from the IDO pool"} />
+                {open ? <ExpandLess /> : <ExpandMore />}
+            </ListItem>
+            <Collapse in={open} timeout="auto" unmountOnExit>
+                <WithdrawUSDCPoolListItemDetails
+                    didAddTransaction={didAddTransaction}
+                    multisig={multisig}
+                    onClose={onClose}
+                />
+            </Collapse>
+        </>
+    );
 }
 
 function InitializeIdoPoolListItem({
@@ -804,8 +842,164 @@ function InitializeIdoPoolListItem({
 }
 
 // UXD MULTISIG instance  AFBx8bHKmfqVxaHxgL8hLmrxJip8Dq8fZckngpQzVVG3
-//    it's PDA            35F3GaWyShU5N5ygYAFWDw6bGVNHnAHSe8RKzqRD2RkT  (The one owning shits)
+//    its PDA            35F3GaWyShU5N5ygYAFWDw6bGVNHnAHSe8RKzqRD2RkT  (The one owning shits)
 const UXDIDOProgramAdress = new PublicKey("UXDJHLPFr8qjLqZs8ejW24zFTq174g1wQHQ4LFhTXxz");
+const multisigPDA = new PublicKey("35F3GaWyShU5N5ygYAFWDw6bGVNHnAHSe8RKzqRD2RkT"); //? Can we actually get that from the multisigClient?
+const uxpMint = new PublicKey("UXPhBoR3qG4UCiGNJfV7MqhHyFqKN68g45GoYvAeL2M");
+const usdcMint = new PublicKey("2wmVCSfPxGPjrnMMn7rchp4uaeoTqN39mXFC2zhPdri9"); //* That"s the mainnet one
+const uxpMultisigTokenAccount = new PublicKey("GJgkVjjsYZeY2RLKcd7346A2dreykurTxkeNw6ysVQkc"); //! We should be able to get it from chain
+
+function WithdrawUSDCPoolListItemDetails({
+    multisig,
+    onClose,
+    didAddTransaction,
+}: {
+    multisig: PublicKey;
+    onClose: Function;
+    didAddTransaction: (tx: PublicKey) => void;
+}) {
+    const [poolAccountAddr, setPoolAccountAddr] = useState("");
+    const [poolUsdcAddr, setPoolUsdcAddr] = useState("");
+    const [multisigUsdcAddr, setMultisigUsdcAddr] = useState("");
+    const { multisigClient } = useWallet();
+    // @ts-ignore
+    const { enqueueSnackbar } = useSnackbar();
+    const withdrawIdoPool = async () => {
+        enqueueSnackbar("Creating USDC pool withdraw transaction", {
+            variant: "info",
+        });
+
+        const data = withdrawIdoUsdcPoolData(multisigClient);
+
+        const accounts = [
+            // HERE NEED TO ADD THE RIGHT ACCOUNTS -- Not sure what can be hardcoded or not your call for now.
+            // Accounts expected can be found here https://github.com/UXDProtocol/uxd_ido/blob/main/programs/uxd_ido/src/lib.rs#L281
+
+            // pool_account -- can be created arbitrarily - then will need to be referenced in the other operations and used on the front end (THE POINTER TO OUR IDO)
+            {
+                pubkey: new PublicKey(poolAccountAddr),
+                isWritable: true,
+                isSigner: true,
+            },
+            // pool_signer -- this is the multisig PDA : 35F3GaWyShU5N5ygYAFWDw6bGVNHnAHSe8RKzqRD2RkT
+            //? While testing we used to use a derivation from the uxp mint for creating this account
+            {
+                pubkey: multisigPDA,
+                isWritable: false,
+                isSigner: true,
+            },
+
+            // pool_usdc --
+            {
+                pubkey: new PublicKey(poolUsdcAddr),
+                isWritable: false,
+                isSigner: false,
+            },
+            // distribution_authority -- should be the multisig PDA - might have an issue with the program cause it"s also a payer
+            // 35F3GaWyShU5N5ygYAFWDw6bGVNHnAHSe8RKzqRD2RkT
+            // NGMI if we discover issues last minute, this need to be done asap for our mental wellbeing, sorry to be lame but it"s super important
+            {
+                pubkey: multisigPDA,
+                isWritable: true,
+                isSigner: true,
+            },
+            // creator_usdc -- is actually the token account that will receive the usdc
+            {
+                pubkey: new PublicKey(multisigUsdcAddr),
+                isWritable: true,
+                isSigner: false,
+            },
+            // token_program
+            {
+                pubkey: TOKEN_PROGRAM_ID,
+                isWritable: false,
+                isSigner: false,
+            },
+
+            // clock
+            {
+                pubkey: anchor.web3.SYSVAR_CLOCK_PUBKEY,
+                isWritable: false,
+                isSigner: false,
+            },
+        ];
+        const transaction = new Keypair();
+        const txSize = 1000; // todo
+        const tx = await multisigClient.rpc.createTransaction(
+            multisigClient.programId,
+            accounts,
+            data,
+            {
+                accounts: {
+                    multisig,
+                    transaction: transaction.publicKey,
+                    proposer: multisigClient.provider.wallet.publicKey,
+                    rent: SYSVAR_RENT_PUBKEY,
+                },
+                signers: [transaction],
+                instructions: [
+                    await multisigClient.account.transaction.createInstruction(
+                        transaction,
+                        // @ts-ignore
+                        txSize
+                    ),
+                ],
+            }
+        );
+        enqueueSnackbar("Transaction created", {
+            variant: "success",
+            action: <ViewTransactionOnExplorerButton signature={tx} />,
+        });
+        didAddTransaction(transaction.publicKey);
+        onClose();
+    };
+    return (
+        <div
+            style={{
+                background: "#f1f0f0",
+                paddingLeft: "24px",
+                paddingRight: "24px",
+            }}
+        >
+            <TextField
+                fullWidth
+                style={{ marginTop: "16px" }}
+                label="Address of the Pool Account"
+                value={poolAccountAddr}
+                type="text"
+                onChange={(e) => {
+                    // @ts-ignore
+                    setPoolAccountAddr(e.target.value);
+                }}
+            />
+            <TextField
+                fullWidth
+                style={{ marginTop: "16px" }}
+                label="Address of the USDC pool"
+                value={poolUsdcAddr}
+                type="text"
+                onChange={(e) => {
+                    // @ts-ignore
+                    setPoolUsdcAddr(e.target.value);
+                }}
+            />
+            <TextField
+                fullWidth
+                style={{ marginTop: "16px" }}
+                label="USDC Token Account to the USDC to (normally the multisig USDC Token account"
+                value={multisigUsdcAddr}
+                type="text"
+                onChange={(e) => {
+                    // @ts-ignore
+                    setMultisigUsdcAddr(e.target.value);
+                }}
+            />
+            <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                <Button onClick={() => withdrawIdoPool()}>Withdraw USDC from IDO Pool</Button>
+            </div>
+        </div>
+    );
+}
 
 function InitializeIdoPoolListItemDetails({
   multisig,
@@ -834,48 +1028,114 @@ function InitializeIdoPoolListItemDetails({
       [multisig.toBuffer()],
       multisigClient.programId
     );
-    const accounts = [
-      {
-        pubkey: multisig,
-        isWritable: true,
-        isSigner: false,
-      },
-      {
-        pubkey: multisigSigner,
-        isWritable: false,
-        isSigner: true,
-      },
-      // HERE NEED TO ADD THE RIGHT ACCOUNTS -- Not sure what can be hardcoded or not your call for now.
-      // Accounts expected can be found here https://github.com/UXDProtocol/uxd_ido/blob/main/programs/uxd_ido/src/lib.rs#L281
 
-      // pool_account -- can be created arbitrarily - then will need to be referenced in the other operations and used on the front end (THE POINTER TO OUR IDO)
+    const poolAccount = Keypair.generate();
+        console.log("poolAccount: ", poolAccount.publicKey.toBase58().toString());
+        const redeemableMint = await createMint(multisigClient.provider, multisigSigner);
+        console.log("redeemableMint: ", redeemableMint.toBase58());
+        const poolUxp = await createTokenAccount(multisigClient.provider, uxpMint, multisigSigner);
+        console.log("poolUxp: ", poolUxp.toBase58());
+        const poolUsdc = await createTokenAccount(
+            multisigClient.provider,
+            usdcMint,
+            multisigSigner
+        );
+        console.log("poolUsdc: ", poolUsdc.toBase58());
 
-      // pool_signer -- this is the multisig PDA : 35F3GaWyShU5N5ygYAFWDw6bGVNHnAHSe8RKzqRD2RkT
-
-      // redeemable_mint --  Wrapped sollet USDC? which one do we use https://solscan.io/token/BXXkv6z8ykpG1yuvUDPgh732wzVHB69RnB9YgSYh3itW
-
-      // uxp_mint -- This is UXP UXPhBoR3qG4UCiGNJfV7MqhHyFqKN68g45GoYvAeL2M token () https://solscan.io/token/UXPhBoR3qG4UCiGNJfV7MqhHyFqKN68g45GoYvAeL2M ()
-
-      // pool_uxp -- 
-
-      // pool_usdc --
-
-      // distribution_authority -- should be the multisig PDA - might have an issue with the program cause it's also a payer 
-      // 35F3GaWyShU5N5ygYAFWDw6bGVNHnAHSe8RKzqRD2RkT
-      // NGMI if we discover issues last minute, this need to be done asap for our mental wellbeing, sorry to be lame but it's super important
-
-      // creator_uxp -- Not sure what is this what was used before?
-
-      // token_program
-
-      // system_program
-
-      // rent
-
-      // clock
-
-    ];
-    const transaction = new Account();
+        const accounts = [
+            //? Do we need these two for some multisig stuff?
+              // {
+              //     pubkey: multisig,
+              //     isWritable: true,
+              //     isSigner: false,
+              // },
+              // {
+              //     pubkey: multisigSigner,
+              //     isWritable: false,
+              //     isSigner: true,
+              // },
+              // HERE NEED TO ADD THE RIGHT ACCOUNTS -- Not sure what can be hardcoded or not your call for now.
+              // Accounts expected can be found here https://github.com/UXDProtocol/uxd_ido/blob/main/programs/uxd_ido/src/lib.rs#L281
+  
+              // pool_account -- can be created arbitrarily - then will need to be referenced in the other operations and used on the front end (THE POINTER TO OUR IDO)
+              {
+                  pubkey: poolAccount.publicKey,
+                  isWritable: true,
+                  isSigner: true,
+              },
+              // pool_signer -- this is the multisig PDA : 35F3GaWyShU5N5ygYAFWDw6bGVNHnAHSe8RKzqRD2RkT
+              //? While testing we used to use a derivation from the uxp mint for creating this account
+              {
+                  pubkey: multisigPDA,
+                  isWritable: false,
+                  isSigner: true,
+              },
+              // redeemable_mint --  Wrapped sollet USDC? which one do we use https://solscan.io/token/BXXkv6z8ykpG1yuvUDPgh732wzVHB69RnB9YgSYh3itW
+              // apparently we do not have to give a shit, jsute create a random mint account
+              {
+                  pubkey: redeemableMint,
+                  isWritable: false,
+                  isSigner: false,
+              },
+              // uxp_mint -- This is UXP UXPhBoR3qG4UCiGNJfV7MqhHyFqKN68g45GoYvAeL2M token () https://solscan.io/token/UXPhBoR3qG4UCiGNJfV7MqhHyFqKN68g45GoYvAeL2M ()
+              {
+                  pubkey: new PublicKey("UXPhBoR3qG4UCiGNJfV7MqhHyFqKN68g45GoYvAeL2M"),
+                  isWritable: false,
+                  isSigner: false,
+              },
+              // pool_uxp --
+              {
+                  pubkey: poolUxp,
+                  isWritable: false,
+                  isSigner: false,
+              },
+              // pool_usdc --
+              {
+                  pubkey: poolUsdc,
+                  isWritable: false,
+                  isSigner: false,
+              },
+              // distribution_authority -- should be the multisig PDA - might have an issue with the program cause it"s also a payer
+              // 35F3GaWyShU5N5ygYAFWDw6bGVNHnAHSe8RKzqRD2RkT
+              // NGMI if we discover issues last minute, this need to be done asap for our mental wellbeing, sorry to be lame but it"s super important
+              {
+                  pubkey: multisigPDA,
+                  isWritable: true,
+                  isSigner: true,
+              },
+              // creator_uxp -- Not sure what is this what was used before
+              //* It is the token account that holds the UXP that will be transfered to the uxpPool at initialization
+              {
+                  pubkey: uxpMultisigTokenAccount,
+                  isWritable: true,
+                  isSigner: false,
+              },
+              // token_program
+              {
+                  pubkey: TOKEN_PROGRAM_ID,
+                  isWritable: false,
+                  isSigner: false,
+              },
+              // system_program
+              {
+                  pubkey: anchor.web3.SystemProgram.programId,
+                  isWritable: false,
+                  isSigner: false,
+              },
+              // rent
+              {
+                  pubkey: anchor.web3.SYSVAR_RENT_PUBKEY,
+                  isWritable: false,
+                  isSigner: false,
+              },
+              // clock
+              {
+                  pubkey: anchor.web3.SYSVAR_CLOCK_PUBKEY,
+                  isWritable: false,
+                  isSigner: false,
+              },
+          ];
+    const transaction = new Keypair();
     const txSize = 1000; // todo 
     const tx = await multisigClient.rpc.createTransaction(
       multisigClient.programId,
@@ -927,7 +1187,7 @@ function InitializeIdoPoolListItemDetails({
       <TextField
         fullWidth
         style={{ marginTop: "16px" }}
-        label="IDO start timestamp"
+        label="IDO start timestamp (in seconds)"
         value={start_ido_ts}
         type="number"
         onChange={(e) => {
@@ -938,7 +1198,7 @@ function InitializeIdoPoolListItemDetails({
       <TextField
         fullWidth
         style={{ marginTop: "16px" }}
-        label="end of deposits timestamp"
+        label="end of deposits timestamp (in seconds)"
         value={end_deposits_ts}
         type="number"
         onChange={(e) => {
@@ -949,7 +1209,7 @@ function InitializeIdoPoolListItemDetails({
       <TextField
         fullWidth
         style={{ marginTop: "16px" }}
-        label="IDO end timestamp"
+        label="IDO end timestamp (in seconds)"
         value={end_ido_ts}
         type="number"
         onChange={(e) => {
@@ -1566,6 +1826,12 @@ function initializeIdoPooldData(multisigClient,
     end_deposits_ts: new BN(end_deposits_ts),
     end_ido_ts: new BN(end_ido_ts),
   });
+}
+
+
+// @ts-ignore
+function withdrawIdoUsdcPoolData(multisigClient: any) {
+    return multisigClient.coder.instruction.encode("withdraw_pool_usdc");
 }
 
 // @ts-ignore
