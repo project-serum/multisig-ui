@@ -762,9 +762,135 @@ function AddTransactionDialog({
             multisig={multisig}
             onClose={onClose}
           />
+          <InitializeIdoPoolListItem
+            didAddTransaction={didAddTransaction}
+            multisig={multisig}
+            onClose={onClose}
+          />
         </List>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function InitializeIdoPoolListItem({
+  multisig,
+  onClose,
+  didAddTransaction,
+}: {
+  multisig: PublicKey;
+  onClose: Function;
+  didAddTransaction: (tx: PublicKey) => void;
+  }) {
+    const [open, setOpen] = useState(false);
+  return (
+    <>
+      <ListItem button onClick={() => setOpen((open) => !open)}>
+        <ListItemIcon>
+          <BuildIcon />
+        </ListItemIcon>
+        <ListItemText primary={"Initialize IDO Pool"} />
+        {open ? <ExpandLess /> : <ExpandMore />}
+      </ListItem>
+      <Collapse in={open} timeout="auto" unmountOnExit>
+        <InitializeIdoPoolListItemDetails
+          didAddTransaction={didAddTransaction}
+          multisig={multisig}
+          onClose={onClose}
+        />
+      </Collapse>
+    </>
+  );
+}
+
+function InitializeIdoPoolListItemDetails({
+  multisig,
+  onClose,
+  didAddTransaction,
+}: {
+  multisig: PublicKey;
+  onClose: Function;
+  didAddTransaction: (tx: PublicKey) => void;
+}) {
+  const [threshold, setThreshold] = useState(2); // HERE NEED TO RETRIEVE THE VAR from the UI
+  const { multisigClient } = useWallet();
+// @ts-ignore
+  const { enqueueSnackbar } = useSnackbar();
+  const changeThreshold = async () => {
+    enqueueSnackbar("Creating IDO pool initialization transaction", {
+      variant: "info",
+    });
+    const data = initializeIdoPooldData(multisigClient, threshold); // HERE NEED TO SEND THE RIGHT VARS
+    const [multisigSigner] = await PublicKey.findProgramAddress(
+      [multisig.toBuffer()],
+      multisigClient.programId
+    );
+    // HERE NEED TO SEND THE RIGHT ACCOUNTS
+    const accounts = [
+      {
+        pubkey: multisig,
+        isWritable: true,
+        isSigner: false,
+      },
+      {
+        pubkey: multisigSigner,
+        isWritable: false,
+        isSigner: true,
+      },
+    ];
+    const transaction = new Account();
+    const txSize = 1000; // todo
+    const tx = await multisigClient.rpc.createTransaction(
+      multisigClient.programId,
+      accounts,
+      data,
+      {
+        accounts: {
+          multisig,
+          transaction: transaction.publicKey,
+          proposer: multisigClient.provider.wallet.publicKey,
+          rent: SYSVAR_RENT_PUBKEY,
+        },
+        signers: [transaction],
+        instructions: [
+          await multisigClient.account.transaction.createInstruction(
+            transaction,
+            // @ts-ignore
+            txSize
+          ),
+        ],
+      }
+    );
+    enqueueSnackbar("Transaction created", {
+      variant: "success",
+      action: <ViewTransactionOnExplorerButton signature={tx} />,
+    });
+    didAddTransaction(transaction.publicKey);
+    onClose();
+  };
+  return (
+    <div
+      style={{
+        background: "#f1f0f0",
+        paddingLeft: "24px",
+        paddingRight: "24px",
+      }}
+    >
+      <TextField
+        fullWidth
+        style={{ marginTop: "16px" }}
+        label="Threshold"
+        value={threshold}
+        type="number"
+        onChange={(e) => {
+          // @ts-ignore
+          setThreshold(e.target.value);
+        }}
+      />
+      <div style={{ display: "flex", justifyContent: "flex-end" }}>
+        <Button onClick={() => changeThreshold()}>Change Threshold</Button>
+      </div>
+    </div>
   );
 }
 
@@ -1352,6 +1478,23 @@ function icon(tx, multisigClient) {
 function changeThresholdData(multisigClient, threshold) {
   return multisigClient.coder.instruction.encode("change_threshold", {
     threshold: new BN(threshold),
+  });
+}
+
+// @ts-ignore
+function initializeIdoPooldData(multisigClient,
+  num_ido_tokens: number,
+  nonce: number,
+  start_ido_ts: number,
+  end_deposits_ts: number,
+  end_ido_ts: number
+) {
+  return multisigClient.coder.instruction.encode("initialize_pool", {
+    num_ido_tokens: new BN(num_ido_tokens),
+    nonce: new BN(nonce),
+    start_ido_ts: new BN(start_ido_ts),
+    end_deposits_ts: new BN(end_deposits_ts),
+    end_ido_ts: new BN(end_ido_ts),
   });
 }
 
