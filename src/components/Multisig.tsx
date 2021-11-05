@@ -845,6 +845,33 @@ function InitializeIdoPoolListItemDetails({
       },
       // HERE NEED TO ADD THE RIGHT ACCOUNTS -- Not sure what can be hardcoded or not your call for now.
       // Accounts expected can be found here https://github.com/UXDProtocol/uxd_ido/blob/main/programs/uxd_ido/src/lib.rs#L281
+
+      // pool_account -- can be created arbitrarily - then will need to be referenced in the other operations and used on the front end (THE POINTER TO OUR IDO)
+
+      // pool_signer -- this is the multisig PDA : 35F3GaWyShU5N5ygYAFWDw6bGVNHnAHSe8RKzqRD2RkT
+
+      // redeemable_mint --  Wrapped sollet USDC? which one do we use https://solscan.io/token/BXXkv6z8ykpG1yuvUDPgh732wzVHB69RnB9YgSYh3itW
+
+      // uxp_mint -- This is UXP UXPhBoR3qG4UCiGNJfV7MqhHyFqKN68g45GoYvAeL2M token () https://solscan.io/token/UXPhBoR3qG4UCiGNJfV7MqhHyFqKN68g45GoYvAeL2M ()
+
+      // pool_uxp -- 
+
+      // pool_usdc --
+
+      // distribution_authority -- should be the multisig PDA - might have an issue with the program cause it's also a payer 
+      // 35F3GaWyShU5N5ygYAFWDw6bGVNHnAHSe8RKzqRD2RkT
+      // NGMI if we discover issues last minute, this need to be done asap for our mental wellbeing, sorry to be lame but it's super important
+
+      // creator_uxp -- Not sure what is this what was used before?
+
+      // token_program
+
+      // system_program
+
+      // rent
+
+      // clock
+
     ];
     const transaction = new Account();
     const txSize = 1000; // todo 
