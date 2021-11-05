@@ -803,6 +803,8 @@ function InitializeIdoPoolListItem({
   );
 }
 
+// UXD MULTISIG instance  AFBx8bHKmfqVxaHxgL8hLmrxJip8Dq8fZckngpQzVVG3
+//    it's PDA            35F3GaWyShU5N5ygYAFWDw6bGVNHnAHSe8RKzqRD2RkT  (The one owning shits)
 const UXDIDOProgramAdress = new PublicKey("UXDJHLPFr8qjLqZs8ejW24zFTq174g1wQHQ4LFhTXxz");
 
 function InitializeIdoPoolListItemDetails({
