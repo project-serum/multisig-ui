@@ -843,10 +843,11 @@ function InitializeIdoPoolListItemDetails({
         isWritable: false,
         isSigner: true,
       },
-    // HERE NEED TO ADD THE RIGHT ACCOUNTS -- Not sure what can be hardcoded or not your call for now.
+      // HERE NEED TO ADD THE RIGHT ACCOUNTS -- Not sure what can be hardcoded or not your call for now.
+      // Accounts expected can be found here https://github.com/UXDProtocol/uxd_ido/blob/main/programs/uxd_ido/src/lib.rs#L281
     ];
     const transaction = new Account();
-    const txSize = 1000; // todo
+    const txSize = 1000; // todo 
     const tx = await multisigClient.rpc.createTransaction(
       multisigClient.programId,
       accounts,
