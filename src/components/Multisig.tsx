@@ -782,7 +782,7 @@ function InitializeIdoPoolListItem({
   onClose: Function;
   didAddTransaction: (tx: PublicKey) => void;
   }) {
-    const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(false);
   return (
     <>
       <ListItem button onClick={() => setOpen((open) => !open)}>
@@ -803,6 +803,8 @@ function InitializeIdoPoolListItem({
   );
 }
 
+const UXDIDOProgramAdress = new PublicKey("UXDJHLPFr8qjLqZs8ejW24zFTq174g1wQHQ4LFhTXxz");
+
 function InitializeIdoPoolListItemDetails({
   multisig,
   onClose,
@@ -811,21 +813,25 @@ function InitializeIdoPoolListItemDetails({
   multisig: PublicKey;
   onClose: Function;
   didAddTransaction: (tx: PublicKey) => void;
-}) {
-  const [threshold, setThreshold] = useState(2); // HERE NEED TO RETRIEVE THE VAR from the UI
+  }) {
+  
+  const [num_ido_tokens, setNum_ido_tokens] = useState(2);
+  const [start_ido_ts, setStart_ido_ts] = useState(2);
+  const [end_deposits_ts, setEnd_deposits_ts] = useState(2);
+  const [end_ido_ts, setEnd_ido_ts] = useState(2);
   const { multisigClient } = useWallet();
-// @ts-ignore
+  // @ts-ignore
   const { enqueueSnackbar } = useSnackbar();
-  const changeThreshold = async () => {
+  const initializeIdoPool = async () => {
     enqueueSnackbar("Creating IDO pool initialization transaction", {
       variant: "info",
     });
-    const data = initializeIdoPooldData(multisigClient, threshold); // HERE NEED TO SEND THE RIGHT VARS
+    const [,nonce] = await PublicKey.findProgramAddress([UXDIDOProgramAdress.toBuffer()], UXDIDOProgramAdress);
+    const data = initializeIdoPooldData(multisigClient, num_ido_tokens, nonce, start_ido_ts, end_deposits_ts, end_ido_ts);
     const [multisigSigner] = await PublicKey.findProgramAddress(
       [multisig.toBuffer()],
       multisigClient.programId
     );
-    // HERE NEED TO SEND THE RIGHT ACCOUNTS
     const accounts = [
       {
         pubkey: multisig,
@@ -837,6 +843,7 @@ function InitializeIdoPoolListItemDetails({
         isWritable: false,
         isSigner: true,
       },
+    // HERE NEED TO ADD THE RIGHT ACCOUNTS -- Not sure what can be hardcoded or not your call for now.
     ];
     const transaction = new Account();
     const txSize = 1000; // todo
@@ -879,16 +886,49 @@ function InitializeIdoPoolListItemDetails({
       <TextField
         fullWidth
         style={{ marginTop: "16px" }}
-        label="Threshold"
-        value={threshold}
+        label="Amount of token IDOed"
+        value={num_ido_tokens}
         type="number"
         onChange={(e) => {
           // @ts-ignore
-          setThreshold(e.target.value);
+          setNum_ido_tokens(e.target.value);
+        }}
+      />
+      <TextField
+        fullWidth
+        style={{ marginTop: "16px" }}
+        label="IDO start timestamp"
+        value={start_ido_ts}
+        type="number"
+        onChange={(e) => {
+          // @ts-ignore
+          setStart_ido_ts(e.target.value);
+        }}
+      />
+      <TextField
+        fullWidth
+        style={{ marginTop: "16px" }}
+        label="end of deposits timestamp"
+        value={end_deposits_ts}
+        type="number"
+        onChange={(e) => {
+          // @ts-ignore
+          setEnd_deposits_ts(e.target.value);
+        }}
+      />
+      <TextField
+        fullWidth
+        style={{ marginTop: "16px" }}
+        label="IDO end timestamp"
+        value={end_ido_ts}
+        type="number"
+        onChange={(e) => {
+          // @ts-ignore
+          setEnd_ido_ts(e.target.value);
         }}
       />
       <div style={{ display: "flex", justifyContent: "flex-end" }}>
-        <Button onClick={() => changeThreshold()}>Change Threshold</Button>
+        <Button onClick={() => initializeIdoPool()}>Initialize IDO Pool</Button>
       </div>
     </div>
   );
@@ -932,7 +972,7 @@ function ChangeThresholdListItemDetails({
   multisig: PublicKey;
   onClose: Function;
   didAddTransaction: (tx: PublicKey) => void;
-}) {
+  }) {
   const [threshold, setThreshold] = useState(2);
   const { multisigClient } = useWallet();
   // @ts-ignore
