@@ -845,7 +845,7 @@ function InitializeIdoPoolListItem({
 //    its PDA            35F3GaWyShU5N5ygYAFWDw6bGVNHnAHSe8RKzqRD2RkT  (The one owning shits)
 const UXDIDOProgramAdress = new PublicKey("UXDJHLPFr8qjLqZs8ejW24zFTq174g1wQHQ4LFhTXxz");
 const multisigPDA = new PublicKey("35F3GaWyShU5N5ygYAFWDw6bGVNHnAHSe8RKzqRD2RkT"); //? Can we actually get that from the multisigClient?
-const uxpMint = new PublicKey("UXPhBoR3qG4UCiGNJfV7MqhHyFqKN68g45GoYvAeL2M");
+const uxpMint = new PublicKey('MNDEFzGvMt87ueuHvVU9VcTqsAP5b3fTGPsHuuPA5ey');//new PublicKey("UXPhBoR3qG4UCiGNJfV7MqhHyFqKN68g45GoYvAeL2M");
 const usdcMint = new PublicKey("2wmVCSfPxGPjrnMMn7rchp4uaeoTqN39mXFC2zhPdri9"); //* That"s the mainnet one
 const uxpMultisigTokenAccount = new PublicKey("GJgkVjjsYZeY2RLKcd7346A2dreykurTxkeNw6ysVQkc"); //! We should be able to get it from chain
 
