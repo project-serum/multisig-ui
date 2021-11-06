@@ -56,7 +56,6 @@ import * as idl from "../utils/idl";
 import { networks } from "../store/reducer";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { createMint, createTokenAccount, findAssociatedTokenAddress } from "../utils/uxd_helper";
-
 export default function Multisig({ multisig }: { multisig?: PublicKey }) {
   return (
     <div>
@@ -99,7 +98,7 @@ function NewMultisigButton() {
 }
 
 export function MultisigInstance({ multisig }: { multisig: PublicKey }) {
-  const { multisigClient } = useWallet();
+  const { multisigClient, uxdClient } = useWallet();
   const [multisigAccount, setMultisigAccount] = useState<any>(undefined);
   const [transactions, setTransactions] = useState<any>(null);
   const [showSignerDialog, setShowSignerDialog] = useState(false);
@@ -860,7 +859,7 @@ function WithdrawUSDCPoolListItemDetails({
 }) {
     const [poolAccountAddr, setPoolAccountAddr] = useState("");
     const [poolUsdcAddr, setPoolUsdcAddr] = useState("");
-    const { multisigClient } = useWallet();
+    const { multisigClient, uxdClient } = useWallet();
     
     const { enqueueSnackbar } = useSnackbar();
     const withdrawIdoPool = async () => {
@@ -882,7 +881,7 @@ function WithdrawUSDCPoolListItemDetails({
             variant: "info",
         });
 
-        const data = withdrawIdoUsdcPoolData(multisigClient);
+        const data = withdrawIdoUsdcPoolData(uxdClient);
 
         const accounts = [
             // HERE NEED TO ADD THE RIGHT ACCOUNTS -- Not sure what can be hardcoded or not your call for now.
@@ -1019,7 +1018,7 @@ function InitializeIdoPoolListItemDetails({
   const [start_ido_ts, setStart_ido_ts] = useState(2);
   const [end_deposits_ts, setEnd_deposits_ts] = useState(2);
   const [end_ido_ts, setEnd_ido_ts] = useState(2);
-  const { multisigClient } = useWallet();
+  const { multisigClient, uxdClient } = useWallet();
   // @ts-ignore
   const { enqueueSnackbar } = useSnackbar();
   const initializeIdoPool = async () => {
@@ -1027,7 +1026,7 @@ function InitializeIdoPoolListItemDetails({
       variant: "info",
     });
     const [,nonce] = await PublicKey.findProgramAddress([UXDIDOProgramAdress.toBuffer()], UXDIDOProgramAdress);
-    const data = initializeIdoPooldData(multisigClient, num_ido_tokens, nonce, start_ido_ts, end_deposits_ts, end_ido_ts);
+    const data = initializeIdoPoolData(uxdClient, num_ido_tokens, nonce, start_ido_ts, end_deposits_ts, end_ido_ts);
     const [multisigSigner] = await PublicKey.findProgramAddress(
       [multisig.toBuffer()],
       multisigClient.programId
@@ -1829,14 +1828,14 @@ function changeThresholdData(multisigClient, threshold) {
 }
 
 // @ts-ignore
-function initializeIdoPooldData(multisigClient,
+function initializeIdoPoolData(uxdClient,
   num_ido_tokens: number,
   nonce: number,
   start_ido_ts: number,
   end_deposits_ts: number,
   end_ido_ts: number
 ) {
-  return multisigClient.coder.instruction.encode("initialize_pool", {
+  return uxdClient.coder.instruction.encode("initialize_pool", {
     num_ido_tokens: new BN(num_ido_tokens),
     nonce: new BN(nonce),
     start_ido_ts: new BN(start_ido_ts),
@@ -1847,8 +1846,8 @@ function initializeIdoPooldData(multisigClient,
 
 
 // @ts-ignore
-function withdrawIdoUsdcPoolData(multisigClient: any) {
-    return multisigClient.coder.instruction.encode("withdraw_pool_usdc");
+function withdrawIdoUsdcPoolData(uxdClient: any) {
+    return uxdClient.coder.instruction.encode("withdraw_pool_usdc");
 }
 
 // @ts-ignore
