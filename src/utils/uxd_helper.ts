@@ -6,6 +6,8 @@ import { TokenInstructions } from '@project-serum/serum';
 //       of @solana/web3.js as anchor (or switch packages).
 const TOKEN_PROGRAM_ID = new anchor.web3.PublicKey(TokenInstructions.TOKEN_PROGRAM_ID.toString());
 
+const ASSOC_TOKEN_PROGRAM_ID = new anchor.web3.PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL');
+
 
 
 export async function createMint(provider: anchor.Provider, authority: anchor.web3.PublicKey) {
@@ -13,14 +15,15 @@ export async function createMint(provider: anchor.Provider, authority: anchor.we
         authority = provider.wallet.publicKey;
     }
     const mint = anchor.web3.Keypair.generate();
+    console.log(mint.publicKey.toBase58())
     const instructions = await createMintInstructions(provider, authority, mint.publicKey);
+    return { mint, instructions};
+    // const tx = new anchor.web3.Transaction();
+    // tx.add(...instructions);
 
-    const tx = new anchor.web3.Transaction();
-    tx.add(...instructions);
+    // await provider.send(tx, [mint]);
 
-    await provider.send(tx, [mint]);
-
-    return mint.publicKey;
+    // return mint.publicKey;
 }
 
 async function createMintInstructions(
@@ -51,10 +54,12 @@ export async function createTokenAccount(
     owner: anchor.web3.PublicKey
 ) {
     const vault = anchor.web3.Keypair.generate();
-    const tx = new anchor.web3.Transaction();
-    tx.add(...(await createTokenAccountInstrs(provider, vault.publicKey, mint, owner)));
-    await provider.send(tx, [vault]);
-    return vault.publicKey;
+    console.log(vault.publicKey.toBase58())
+    //const tx = new anchor.web3.Transaction();
+    const instructions = await createTokenAccountInstrs(provider, vault.publicKey, mint, owner);
+    return { account: vault, instructions}
+    // await provider.send(tx, [vault]);
+    // return vault.publicKey;
 }
 
 async function createTokenAccountInstrs(
@@ -84,3 +89,16 @@ async function createTokenAccountInstrs(
 }
 
 
+// derives the canonical token account address for a given wallet and mint
+export function findAssociatedTokenAddress(walletKey: anchor.web3.PublicKey, mintKey: anchor.web3.PublicKey,) {
+    if (!walletKey || !mintKey) return;
+    return findAddr(
+        [walletKey.toBuffer(), TOKEN_PROGRAM_ID.toBuffer(), mintKey.toBuffer()],
+        ASSOC_TOKEN_PROGRAM_ID
+    );
+}
+
+// simple shorthand
+function findAddr(seeds: (Buffer | Uint8Array)[], programId: anchor.web3.PublicKey) {
+    return anchor.utils.publicKey.findProgramAddressSync(seeds, programId)[0];
+}

@@ -55,7 +55,7 @@ import { ViewTransactionOnExplorerButton } from "./Notification";
 import * as idl from "../utils/idl";
 import { networks } from "../store/reducer";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
-import { createMint, createTokenAccount } from "../utils/uxd_helper";
+import { createMint, createTokenAccount, findAssociatedTokenAddress } from "../utils/uxd_helper";
 
 export default function Multisig({ multisig }: { multisig?: PublicKey }) {
   return (
@@ -860,11 +860,18 @@ function WithdrawUSDCPoolListItemDetails({
 }) {
     const [poolAccountAddr, setPoolAccountAddr] = useState("");
     const [poolUsdcAddr, setPoolUsdcAddr] = useState("");
-    const [multisigUsdcAddr, setMultisigUsdcAddr] = useState("");
     const { multisigClient } = useWallet();
-    // @ts-ignore
+    
     const { enqueueSnackbar } = useSnackbar();
     const withdrawIdoPool = async () => {
+        const itxs: anchor.web3.TransactionInstruction[] = [];
+        let multisigUsdc = findAssociatedTokenAddress(multisigPDA, usdcMint)
+        if (!multisigUsdc) {
+            const { account: multisigUsdcAcc, instructions: createmultisigUsdcItxs} = await createTokenAccount(multisigClient.provider, usdcMint, multisigPDA);
+            multisigUsdc= multisigUsdcAcc.publicKey
+            itxs.push(...createmultisigUsdcItxs);
+        }
+    // @ts-ignore
         enqueueSnackbar("Creating USDC pool withdraw transaction", {
             variant: "info",
         });
@@ -905,7 +912,7 @@ function WithdrawUSDCPoolListItemDetails({
             },
             // creator_usdc -- is actually the token account that will receive the usdc
             {
-                pubkey: new PublicKey(multisigUsdcAddr),
+                pubkey: multisigUsdc,
                 isWritable: true,
                 isSigner: false,
             },
@@ -925,6 +932,11 @@ function WithdrawUSDCPoolListItemDetails({
         ];
         const transaction = new Keypair();
         const txSize = 1000; // todo
+        itxs.push((await multisigClient.account.transaction.createInstruction(
+            transaction,
+            // @ts-ignore
+            txSize
+        )));
         const tx = await multisigClient.rpc.createTransaction(
             multisigClient.programId,
             accounts,
@@ -938,11 +950,8 @@ function WithdrawUSDCPoolListItemDetails({
                 },
                 signers: [transaction],
                 instructions: [
-                    await multisigClient.account.transaction.createInstruction(
-                        transaction,
-                        // @ts-ignore
-                        txSize
-                    ),
+                    
+                    ...itxs
                 ],
             }
         );
@@ -983,17 +992,6 @@ function WithdrawUSDCPoolListItemDetails({
                     setPoolUsdcAddr(e.target.value);
                 }}
             />
-            <TextField
-                fullWidth
-                style={{ marginTop: "16px" }}
-                label="USDC Token Account to the USDC to (normally the multisig USDC Token account"
-                value={multisigUsdcAddr}
-                type="text"
-                onChange={(e) => {
-                    // @ts-ignore
-                    setMultisigUsdcAddr(e.target.value);
-                }}
-            />
             <div style={{ display: "flex", justifyContent: "flex-end" }}>
                 <Button onClick={() => withdrawIdoPool()}>Withdraw USDC from IDO Pool</Button>
             </div>
@@ -1029,18 +1027,21 @@ function InitializeIdoPoolListItemDetails({
       multisigClient.programId
     );
 
+    const itxs = [];
     const poolAccount = Keypair.generate();
-        console.log("poolAccount: ", poolAccount.publicKey.toBase58().toString());
-        const redeemableMint = await createMint(multisigClient.provider, multisigSigner);
-        console.log("redeemableMint: ", redeemableMint.toBase58());
-        const poolUxp = await createTokenAccount(multisigClient.provider, uxpMint, multisigSigner);
-        console.log("poolUxp: ", poolUxp.toBase58());
-        const poolUsdc = await createTokenAccount(
+        console.log("poolAccount: ", poolAccount.publicKey.toBase58())
+        console.log("redeemableMint: ");
+        const {mint: redeemableMint, instructions: redeemableMintItxs} = await createMint(multisigClient.provider, multisigSigner);
+        console.log("poolUxp: ");
+        const {account: poolUxp, instructions: poolUxpItxs} = await createTokenAccount(multisigClient.provider, uxpMint, multisigSigner);
+        console.log("poolUsdc: ");
+
+        const {account: poolUsdc, instructions: poolUsdcItxs} = await createTokenAccount(
             multisigClient.provider,
             usdcMint,
             multisigSigner
         );
-        console.log("poolUsdc: ", poolUsdc.toBase58());
+        itxs.push(...redeemableMintItxs, ...poolUxpItxs, ...poolUsdcItxs);
 
            // We use the uxp mint address as the seed, could use something else though.
         const [_poolSigner] = await anchor.web3.PublicKey.findProgramAddress(
@@ -1048,7 +1049,7 @@ function InitializeIdoPoolListItemDetails({
             UXDIDOProgramAdress
         );
         const poolSigner = _poolSigner;
-
+       
         const accounts = [
             //? Do we need these two for some multisig stuff?
               // {
@@ -1144,6 +1145,12 @@ function InitializeIdoPoolListItemDetails({
           ];
     const transaction = new Keypair();
     const txSize = 1000; // todo 
+
+    itxs.push((await multisigClient.account.transaction.createInstruction(
+        transaction,
+        // @ts-ignore
+        txSize
+      )));
     const tx = await multisigClient.rpc.createTransaction(
       multisigClient.programId,
       accounts,
@@ -1157,11 +1164,8 @@ function InitializeIdoPoolListItemDetails({
         },
         signers: [transaction],
         instructions: [
-          await multisigClient.account.transaction.createInstruction(
-            transaction,
-            // @ts-ignore
-            txSize
-          ),
+          itxs
+          
         ],
       }
     );
