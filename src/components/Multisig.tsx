@@ -1026,7 +1026,6 @@ function InitializeIdoPoolListItemDetails({
       variant: "info",
     });
     const [,nonce] = await PublicKey.findProgramAddress([UXDIDOProgramAdress.toBuffer()], UXDIDOProgramAdress);
-    const data = initializeIdoPoolData(uxdClient, num_ido_tokens, nonce, start_ido_ts, end_deposits_ts, end_ido_ts);
     const [multisigSigner] = await PublicKey.findProgramAddress(
       [multisig.toBuffer()],
       multisigClient.programId
@@ -1047,14 +1046,13 @@ function InitializeIdoPoolListItemDetails({
             multisigSigner
         );
         itxs.push(...redeemableMintItxs, ...poolUxpItxs, ...poolUsdcItxs);
-
+            console.log({uxpMint})
            // We use the uxp mint address as the seed, could use something else though.
         const [_poolSigner] = await anchor.web3.PublicKey.findProgramAddress(
             [uxpMint.toBuffer()],
             UXDIDOProgramAdress
         );
         const poolSigner = _poolSigner;
-       
         const accounts = [
             //? Do we need these two for some multisig stuff?
               // {
@@ -1148,14 +1146,32 @@ function InitializeIdoPoolListItemDetails({
                   isSigner: false,
               },
           ];
+          const data = initializeIdoPoolData(uxdClient, num_ido_tokens, nonce, start_ido_ts, end_deposits_ts, end_ido_ts, {
+            poolAccount: poolAccount,
+            poolSigner,
+            distributionAuthority: multisigPDA,
+            redeemableMint,
+            usdcMint,
+            uxpMint,
+            poolUxp,
+            poolUsdc,
+            creatorUxp: uxpMultisigTokenAccount,
+            tokenProgram: TOKEN_PROGRAM_ID,
+            systemProgram: anchor.web3.SystemProgram.programId,
+            rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+            clock: anchor.web3.SYSVAR_CLOCK_PUBKEY,
+        },);
+        console.log({data})
     const transaction = new Keypair();
     const txSize = 1000; // todo 
-
-    itxs.push((await multisigClient.account.transaction.createInstruction(
-        transaction,
-        // @ts-ignore
-        txSize
-      )));
+        const txItx = (await multisigClient.account.transaction.createInstruction(
+            transaction,
+            // @ts-ignore
+            txSize
+          ));
+          console.log({txItx})
+    itxs.push(txItx);
+    console.log({itxs})
     const tx = await multisigClient.rpc.createTransaction(
       multisigClient.programId,
       accounts,
@@ -1828,26 +1844,28 @@ function changeThresholdData(multisigClient, threshold) {
 }
 
 // @ts-ignore
-function initializeIdoPoolData(uxdClient,
+function initializeIdoPoolData(uxdClient: anchor.Program,
   num_ido_tokens: number,
   nonce: number,
   start_ido_ts: number,
   end_deposits_ts: number,
-  end_ido_ts: number
+  end_ido_ts: number,
+  accounts: any
+
 ) {
-  return uxdClient.coder.instruction.encode("initialize_pool", {
-    num_ido_tokens: new BN(num_ido_tokens),
-    nonce: new BN(nonce),
-    start_ido_ts: new BN(start_ido_ts),
-    end_deposits_ts: new BN(end_deposits_ts),
-    end_ido_ts: new BN(end_ido_ts),
-  });
+  return uxdClient.coder.instruction.encode("initialize_pool", uxdClient.instruction.initializePool(
+    new BN(num_ido_tokens),
+    new BN(nonce),
+    new BN(start_ido_ts),
+    new BN(end_deposits_ts),
+    new BN(end_ido_ts),
+  {accounts}))
 }
 
 
 // @ts-ignore
-function withdrawIdoUsdcPoolData(uxdClient: any) {
-    return uxdClient.coder.instruction.encode("withdraw_pool_usdc");
+function withdrawIdoUsdcPoolData(uxdClient: anchor.Program) {
+    return uxdClient.coder.instruction.encode("withdraw_pool_usdc", {});
 }
 
 // @ts-ignore
