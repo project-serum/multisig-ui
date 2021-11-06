@@ -871,6 +871,12 @@ function WithdrawUSDCPoolListItemDetails({
             multisigUsdc= multisigUsdcAcc.publicKey
             itxs.push(...createmultisigUsdcItxs);
         }
+           // We use the uxp mint address as the seed, could use something else though.
+           const [_poolSigner] = await anchor.web3.PublicKey.findProgramAddress(
+            [uxpMint.toBuffer()],
+            UXDIDOProgramAdress
+        );
+        const poolSigner = _poolSigner;
     // @ts-ignore
         enqueueSnackbar("Creating USDC pool withdraw transaction", {
             variant: "info",
@@ -891,7 +897,7 @@ function WithdrawUSDCPoolListItemDetails({
             // pool_signer -- this is the multisig PDA : 35F3GaWyShU5N5ygYAFWDw6bGVNHnAHSe8RKzqRD2RkT
             //? While testing we used to use a derivation from the uxp mint for creating this account
             {
-                pubkey: multisigPDA,
+                pubkey: poolSigner,
                 isWritable: false,
                 isSigner: true,
             },
