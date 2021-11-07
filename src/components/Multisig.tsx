@@ -844,7 +844,7 @@ function WithdrawIdoPoolListItem({
 
 // UXD MULTISIG instance  AFBx8bHKmfqVxaHxgL8hLmrxJip8Dq8fZckngpQzVVG3
 //    its PDA            35F3GaWyShU5N5ygYAFWDw6bGVNHnAHSe8RKzqRD2RkT  (The one owning shits)
-const UXDIDOProgramAdress = new PublicKey("UXDJHLPFr8qjLqZs8ejW24zFTq174g1wQHQ4LFhTXxz");
+const IdoProgramAddress = new PublicKey("UXDJHLPFr8qjLqZs8ejW24zFTq174g1wQHQ4LFhTXxz");
 const multisigPDA = new PublicKey("35F3GaWyShU5N5ygYAFWDw6bGVNHnAHSe8RKzqRD2RkT"); //? Can we actually get that from the multisigClient?
 const uxpMint = new PublicKey('MNDEFzGvMt87ueuHvVU9VcTqsAP5b3fTGPsHuuPA5ey');//new PublicKey("UXPhBoR3qG4UCiGNJfV7MqhHyFqKN68g45GoYvAeL2M");
 const usdcMint = new PublicKey("2wmVCSfPxGPjrnMMn7rchp4uaeoTqN39mXFC2zhPdri9"); //* That"s the mainnet one
@@ -873,7 +873,7 @@ function InitializeIdoPoolListItemDetails({
     enqueueSnackbar("Creating IDO pool initialization transaction", {
       variant: "info",
     });
-    const [,nonce] = await PublicKey.findProgramAddress([UXDIDOProgramAdress.toBuffer()], UXDIDOProgramAdress);
+    const [,nonce] = await PublicKey.findProgramAddress([IdoProgramAddress.toBuffer()], IdoProgramAddress);
     const [multisigSigner] = await PublicKey.findProgramAddress(
       [multisig.toBuffer()],
       multisigClient.programId
@@ -897,9 +897,10 @@ function InitializeIdoPoolListItemDetails({
         // We use the uxp mint address as the seed, could use something else though.
     const [_poolSigner] = await anchor.web3.PublicKey.findProgramAddress(
         [uxpMint.toBuffer()],
-        UXDIDOProgramAdress
+        IdoProgramAddress
     );
     const poolSigner = _poolSigner;
+    const distributionAuthority = multisigPDA;
     const accounts = [
 
             // HERE NEED TO ADD THE RIGHT ACCOUNTS -- Not sure what can be hardcoded or not your call for now.
@@ -947,7 +948,7 @@ function InitializeIdoPoolListItemDetails({
             // 35F3GaWyShU5N5ygYAFWDw6bGVNHnAHSe8RKzqRD2RkT
             // NGMI if we discover issues last minute, this need to be done asap for our mental wellbeing, sorry to be lame but it"s super important
             {
-                pubkey: multisigPDA,
+                pubkey: distributionAuthority,
                 isWritable: true,
                 isSigner: true,
             },
@@ -1121,7 +1122,7 @@ function WithdrawIdoPoolListItemDetails({
            // We use the uxp mint address as the seed, could use something else though.
            const [_poolSigner] = await anchor.web3.PublicKey.findProgramAddress(
             [uxpMint.toBuffer()],
-            UXDIDOProgramAdress
+            IdoProgramAddress
         );
         const poolSigner = _poolSigner;
     // @ts-ignore
@@ -1131,6 +1132,7 @@ function WithdrawIdoPoolListItemDetails({
 
         const poolAccountKey = new PublicKey(poolAccountAddr)
         const poolUsdcKey = new PublicKey(poolUsdcAddr)
+        const distributionAuthority = multisigPDA;
         const accounts = [
             // HERE NEED TO ADD THE RIGHT ACCOUNTS -- Not sure what can be hardcoded or not your call for now.
             // Accounts expected can be found here https://github.com/UXDProtocol/uxd_ido/blob/main/programs/uxd_ido/src/lib.rs#L281
@@ -1138,29 +1140,29 @@ function WithdrawIdoPoolListItemDetails({
             // pool_account -- can be created arbitrarily - then will need to be referenced in the other operations and used on the front end (THE POINTER TO OUR IDO)
             {
                 pubkey: poolAccountKey,
-                isWritable: true,
-                isSigner: true,
+                isWritable: false,
+                isSigner: false,
             },
             // pool_signer -- this is the multisig PDA : 35F3GaWyShU5N5ygYAFWDw6bGVNHnAHSe8RKzqRD2RkT
             //? While testing we used to use a derivation from the uxp mint for creating this account
             {
                 pubkey: poolSigner,
                 isWritable: false,
-                isSigner: true,
+                isSigner: false,
             },
 
             // pool_usdc --
             {
                 pubkey: poolUsdcKey,
-                isWritable: false,
+                isWritable: true,
                 isSigner: false,
             },
             // distribution_authority -- should be the multisig PDA - might have an issue with the program cause it"s also a payer
             // 35F3GaWyShU5N5ygYAFWDw6bGVNHnAHSe8RKzqRD2RkT
             // NGMI if we discover issues last minute, this need to be done asap for our mental wellbeing, sorry to be lame but it"s super important
             {
-                pubkey: multisigPDA,
-                isWritable: true,
+                pubkey: distributionAuthority,
+                isWritable: false,
                 isSigner: true,
             },
             // creator_usdc -- is actually the token account that will receive the usdc

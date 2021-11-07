@@ -12,7 +12,7 @@ import Wallet from "@project-serum/sol-wallet-adapter";
 import { Program, Provider, web3 } from "@project-serum/anchor";
 import { State as StoreState } from "../store/reducer";
 import MultisigIdl from "../idl";
-import uxdIdl from "../idl/controllerUXD";
+import idoIdl from "../idl/idoIdl";
 
 export function useWallet(): WalletContextValues {
   const w = useContext(WalletContext);
@@ -59,7 +59,7 @@ export default function WalletProvider(
     const UXDIDOProgramAdress = new web3.PublicKey("UXDJHLPFr8qjLqZs8ejW24zFTq174g1wQHQ4LFhTXxz");
 
     const idoClient = new Program(
-      uxdIdl,
+      idoIdl,
       UXDIDOProgramAdress,
       provider
     )
