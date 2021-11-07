@@ -1025,7 +1025,7 @@ function InitializeIdoPoolListItemDetails({
           proposer: multisigClient.provider.wallet.publicKey,
           rent: SYSVAR_RENT_PUBKEY,
         },
-        signers: [transaction, multisigClient.provider.wallet],
+        signers: [transaction],
         instructions: [
           txItx
         ],
