@@ -457,6 +457,7 @@ function TxListItem({
       [multisig.toBuffer()],
       multisigClient.programId
     );
+    console.log({tx: tx.publicKey})
     await multisigClient.rpc.executeTransaction({
       accounts: {
         multisig,
@@ -950,7 +951,7 @@ function InitializeIdoPoolListItemDetails({
             {
                 pubkey: distributionAuthority,
                 isWritable: true,
-                isSigner: true,
+                isSigner: false,
             },
             // creator_uxp -- Not sure what is this what was used before
             //* It is the token account that holds the UXP that will be transfered to the uxpPool at initialization
@@ -1025,7 +1026,7 @@ function InitializeIdoPoolListItemDetails({
           proposer: multisigClient.provider.wallet.publicKey,
           rent: SYSVAR_RENT_PUBKEY,
         },
-        signers: [transaction],
+        signers: [transaction, poolAccount],
         instructions: [
           txItx
         ],
