@@ -28,7 +28,7 @@ const WalletContext = React.createContext<null | WalletContextValues>(null);
 type WalletContextValues = {
   wallet: Wallet;
   multisigClient: Program;
-  uxdClient: Program
+  idoClient: Program
 };
 
 export default function WalletProvider(
@@ -41,7 +41,7 @@ export default function WalletProvider(
     };
   });
 
-  const { wallet, multisigClient, uxdClient } = useMemo(() => {
+  const { wallet, multisigClient, idoClient } = useMemo(() => {
     const opts: ConfirmOptions = {
       preflightCommitment: "recent",
       commitment: "recent",
@@ -58,7 +58,7 @@ export default function WalletProvider(
 
     const UXDIDOProgramAdress = new web3.PublicKey("UXDJHLPFr8qjLqZs8ejW24zFTq174g1wQHQ4LFhTXxz");
 
-    const uxdClient = new Program(
+    const idoClient = new Program(
       uxdIdl,
       UXDIDOProgramAdress,
       provider
@@ -67,12 +67,12 @@ export default function WalletProvider(
     return {
       wallet,
       multisigClient,
-      uxdClient
+      idoClient
     };
   }, [walletProvider, network]);
 
   return (
-    <WalletContext.Provider value={{ wallet, multisigClient, uxdClient }}>
+    <WalletContext.Provider value={{ wallet, multisigClient, idoClient }}>
       {props.children}
     </WalletContext.Provider>
   );

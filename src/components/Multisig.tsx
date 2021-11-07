@@ -98,7 +98,7 @@ function NewMultisigButton() {
 }
 
 export function MultisigInstance({ multisig }: { multisig: PublicKey }) {
-  const { multisigClient, uxdClient } = useWallet();
+  const { multisigClient, idoClient } = useWallet();
   const [multisigAccount, setMultisigAccount] = useState<any>(undefined);
   const [transactions, setTransactions] = useState<any>(null);
   const [showSignerDialog, setShowSignerDialog] = useState(false);
@@ -866,7 +866,7 @@ function InitializeIdoPoolListItemDetails({
   const [start_ido_ts, setStart_ido_ts] = useState((Date.now()/1000) + 60 * 5);
   const [end_deposits_ts, setEnd_deposits_ts] = useState((Date.now()/1000) + 60 * 10);
   const [end_ido_ts, setEnd_ido_ts] = useState((Date.now()/1000) + 60 * 15);
-  const { multisigClient, uxdClient } = useWallet();
+  const { multisigClient, idoClient } = useWallet();
   // @ts-ignore
   const { enqueueSnackbar } = useSnackbar();
   const initializeIdoPool = async () => {
@@ -995,7 +995,7 @@ function InitializeIdoPoolListItemDetails({
             },
         ];
         console.log({multisigUxpTokenAccount})
-    const data = initializeIdoPoolData(uxdClient, num_ido_tokens, nonce, start_ido_ts, end_deposits_ts, end_ido_ts, 
+    const data = initializeIdoPoolData(idoClient, num_ido_tokens, nonce, start_ido_ts, end_deposits_ts, end_ido_ts, 
         {
             poolAccount: poolAccount.publicKey,
             poolSigner,
@@ -1011,7 +1011,8 @@ function InitializeIdoPoolListItemDetails({
             rent: anchor.web3.SYSVAR_RENT_PUBKEY,
             clock: anchor.web3.SYSVAR_CLOCK_PUBKEY,
         }, 
-        poolAccount
+        poolAccount,
+        itxs
     );
     console.log({data})
 
@@ -1023,29 +1024,9 @@ function InitializeIdoPoolListItemDetails({
         txSize
         ));
     
-    itxs.push(txItx);
-    console.log({
-        uxdClient: uxdClient.programId,
-        accounts,
-        data,
-        nestedAccounts: {
-          multisig,
-          transaction: transaction.publicKey,
-          proposer: multisigClient.provider.wallet.publicKey,
-          rent: SYSVAR_RENT_PUBKEY,
-                
-        },
-        signers: [transaction],
-        instructions: [
-          ...itxs
-          
-        ],
-            
-        
-    })
-    console.log("itxs[0]", uxdClient.programId.toBase58())
+ 
     const tx = await multisigClient.rpc.createTransaction(
-      uxdClient.programId,
+      idoClient.programId,
       accounts,
       data,
       {
@@ -1057,7 +1038,7 @@ function InitializeIdoPoolListItemDetails({
         },
         signers: [transaction],
         instructions: [
-          itxs
+          txItx
         ],
       }
     );
@@ -1116,12 +1097,12 @@ function InitializeIdoPoolListItemDetails({
         value={end_ido_ts}
         type="number"
         onChange={(e) => {
-          // @ts-ignore
+          // @ts-ignore 
           setEnd_ido_ts(e.target.value);
         }}
       />
       <div style={{ display: "flex", justifyContent: "flex-end" }}>
-        <Button onClick={() => initializeIdoPool()}>Initialize IDO Pool</Button>
+        <Button onClick={() => initializeIdoPool().catch(e => console.error(e))}>Initialize IDO Pool</Button>
       </div>
     </div>
   );
@@ -1138,7 +1119,7 @@ function WithdrawIdoPoolListItemDetails({
 }) {
     const [poolAccountAddr, setPoolAccountAddr] = useState("");
     const [poolUsdcAddr, setPoolUsdcAddr] = useState("");
-    const { multisigClient, uxdClient } = useWallet();
+    const { multisigClient, idoClient } = useWallet();
     
     const { enqueueSnackbar } = useSnackbar();
     const withdrawIdoPool = async () => {
@@ -1160,7 +1141,7 @@ function WithdrawIdoPoolListItemDetails({
             variant: "info",
         });
 
-        const data = withdrawIdoUsdcPoolData(uxdClient);
+        const data = withdrawIdoUsdcPoolData(idoClient);
 
         const accounts = [
             // HERE NEED TO ADD THE RIGHT ACCOUNTS -- Not sure what can be hardcoded or not your call for now.
@@ -1872,18 +1853,19 @@ function changeThresholdData(multisigClient, threshold) {
 }
 
 // @ts-ignore
-function initializeIdoPoolData(uxdClient: anchor.Program,
+function initializeIdoPoolData(idoClient: anchor.Program,
   num_ido_tokens: number,
   nonce: number,
   start_ido_ts: number,
   end_deposits_ts: number,
   end_ido_ts: number,
   accounts: any,
-  signer: Keypair
+  signer: Keypair,
+  itxs: anchor.web3.TransactionInstruction[]
 ) {
-  return uxdClient.coder.instruction.encode(
+  return idoClient.coder.instruction.encode(
       "initialize_pool", 
-      uxdClient.instruction.initializePool(
+      idoClient.instruction.initializePool(
         new BN(num_ido_tokens),
         new BN(nonce),
         new BN(start_ido_ts),
@@ -1891,15 +1873,16 @@ function initializeIdoPoolData(uxdClient: anchor.Program,
         new BN(end_ido_ts),
         {
             accounts, 
-            signers: [signer]
+            signers: [signer],
+            instructions: [...itxs]
         }
     ));
 }
 
 
 // @ts-ignore
-function withdrawIdoUsdcPoolData(uxdClient: anchor.Program) {
-    return uxdClient.coder.instruction.encode("withdraw_pool_usdc", {});
+function withdrawIdoUsdcPoolData(idoClient: anchor.Program) {
+    return idoClient.coder.instruction.encode("withdraw_pool_usdc", {});
 }
 
 // @ts-ignore
