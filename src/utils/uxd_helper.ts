@@ -4,7 +4,7 @@ import { TokenInstructions } from '@project-serum/serum';
 
 // TODO: remove this constant once @project-serum/serum uses the same version
 //       of @solana/web3.js as anchor (or switch packages).
-const TOKEN_PROGRAM_ID = new anchor.web3.PublicKey(TokenInstructions.TOKEN_PROGRAM_ID.toString());
+const TOKEN_PROGRAM_ID = TokenInstructions.TOKEN_PROGRAM_ID;
 
 const ASSOC_TOKEN_PROGRAM_ID = new anchor.web3.PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL');
 
@@ -31,6 +31,7 @@ async function createMintInstructions(
     authority: anchor.web3.PublicKey,
     mint: anchor.web3.PublicKey
 ) {
+    console.log("TOKEN_PROGRAM_ID", TOKEN_PROGRAM_ID)
     let instructions = [
         anchor.web3.SystemProgram.createAccount({
             fromPubkey: provider.wallet.publicKey,
