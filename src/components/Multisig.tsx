@@ -864,8 +864,8 @@ function InitializeIdoPoolListItemDetails({
   
   const [num_ido_tokens, setNum_ido_tokens] = useState(3);
   const [start_ido_ts, setStart_ido_ts] = useState((Date.now()/1000) + 60 * 5);
-  const [end_deposits_ts, setEnd_deposits_ts] = useState((Date.now()/1000) + 60 * 10);
-  const [end_ido_ts, setEnd_ido_ts] = useState((Date.now()/1000) + 60 * 15);
+  const [end_deposits_ts, setEnd_deposits_ts] = useState((Date.now()/1000) + 60 * 7);
+  const [end_ido_ts, setEnd_ido_ts] = useState((Date.now()/1000) + 60 * 10);
   const { multisigClient, idoClient } = useWallet();
   // @ts-ignore
   const { enqueueSnackbar } = useSnackbar();
@@ -1025,7 +1025,7 @@ function InitializeIdoPoolListItemDetails({
           proposer: multisigClient.provider.wallet.publicKey,
           rent: SYSVAR_RENT_PUBKEY,
         },
-        signers: [transaction],
+        signers: [transaction, multisigClient.provider.wallet],
         instructions: [
           txItx
         ],
