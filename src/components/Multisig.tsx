@@ -457,7 +457,10 @@ function TxListItem({
       [multisig.toBuffer()],
       multisigClient.programId
     );
-    console.log({tx: tx.publicKey})
+    console.log({
+      tx: tx.publicKey,
+      remainingAccounts: txAccount
+    })
     await multisigClient.rpc.executeTransaction({
       accounts: {
         multisig,
@@ -951,7 +954,7 @@ function InitializeIdoPoolListItemDetails({
             {
                 pubkey: distributionAuthority,
                 isWritable: true,
-                isSigner: false,
+                isSigner: true,
             },
             // creator_uxp -- Not sure what is this what was used before
             //* It is the token account that holds the UXP that will be transfered to the uxpPool at initialization
@@ -985,7 +988,6 @@ function InitializeIdoPoolListItemDetails({
                 isSigner: false,
             },
         ];
-
         const data = initializeIdoPoolData(idoClient, num_ido_tokens, nonce, start_ido_ts, end_deposits_ts, end_ido_ts, 
         {
             poolAccount: poolAccount.publicKey,
@@ -1002,7 +1004,7 @@ function InitializeIdoPoolListItemDetails({
             rent: anchor.web3.SYSVAR_RENT_PUBKEY,
             clock: anchor.web3.SYSVAR_CLOCK_PUBKEY,
         }, 
-        poolAccount,
+        [poolAccount],
         itxs
     );
 
@@ -1023,15 +1025,16 @@ function InitializeIdoPoolListItemDetails({
         accounts: {
           multisig,
           transaction: transaction.publicKey,
-          proposer: multisigClient.provider.wallet.publicKey,
+          proposer: multisigClient.provider.wallet,
           rent: SYSVAR_RENT_PUBKEY,
         },
-        signers: [transaction, poolAccount],
+        signers: [transaction],
         instructions: [
           txItx
         ],
       }
     );
+    console.log({ tx })
     enqueueSnackbar("Transaction created", {
       variant: "success",
       action: <ViewTransactionOnExplorerButton signature={tx} />,
@@ -1868,7 +1871,7 @@ function initializeIdoPoolData(idoClient: anchor.Program,
   end_deposits_ts: number,
   end_ido_ts: number,
   accounts: any,
-  signer: Keypair,
+  signers: Keypair[],
   itxs: anchor.web3.TransactionInstruction[]
 ) {
   return idoClient.coder.instruction.encode(
@@ -1881,7 +1884,7 @@ function initializeIdoPoolData(idoClient: anchor.Program,
         new BN(end_ido_ts),
         {
             accounts, 
-            signers: [signer],
+            signers,
             instructions: [...itxs]
         }
     ));
