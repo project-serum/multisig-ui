@@ -98,7 +98,7 @@ function NewMultisigButton() {
 }
 
 export function MultisigInstance({ multisig }: { multisig: PublicKey }) {
-  const { multisigClient, idoClient } = useWallet();
+  const { multisigClient } = useWallet();
   const [multisigAccount, setMultisigAccount] = useState<any>(undefined);
   const [transactions, setTransactions] = useState<any>(null);
   const [showSignerDialog, setShowSignerDialog] = useState(false);
@@ -894,7 +894,6 @@ function InitializeIdoPoolListItemDetails({
         multisigSigner
     );
     itxs.push(...redeemableMintItxs, ...poolUxpItxs, ...poolUsdcItxs);
-        console.log({uxpMint})
         // We use the uxp mint address as the seed, could use something else though.
     const [_poolSigner] = await anchor.web3.PublicKey.findProgramAddress(
         [uxpMint.toBuffer()],
@@ -902,17 +901,7 @@ function InitializeIdoPoolListItemDetails({
     );
     const poolSigner = _poolSigner;
     const accounts = [
-        //? Do we need these two for some multisig stuff?
-        //   {
-        //       pubkey: multisig,
-        //       isWritable: true,
-        //       isSigner: false,
-        //   },
-        //   {
-        //       pubkey: multisigSigner,
-        //       isWritable: false,
-        //       isSigner: true,
-        //   },
+
             // HERE NEED TO ADD THE RIGHT ACCOUNTS -- Not sure what can be hardcoded or not your call for now.
             // Accounts expected can be found here https://github.com/UXDProtocol/uxd_ido/blob/main/programs/uxd_ido/src/lib.rs#L281
 
@@ -994,8 +983,8 @@ function InitializeIdoPoolListItemDetails({
                 isSigner: false,
             },
         ];
-        console.log({multisigUxpTokenAccount})
-    const data = initializeIdoPoolData(idoClient, num_ido_tokens, nonce, start_ido_ts, end_deposits_ts, end_ido_ts, 
+
+        const data = initializeIdoPoolData(idoClient, num_ido_tokens, nonce, start_ido_ts, end_deposits_ts, end_ido_ts, 
         {
             poolAccount: poolAccount.publicKey,
             poolSigner,
@@ -1014,7 +1003,6 @@ function InitializeIdoPoolListItemDetails({
         poolAccount,
         itxs
     );
-    console.log({data})
 
     const transaction = new Keypair();
     const txSize = 1000; // todo 
@@ -1124,10 +1112,10 @@ function WithdrawIdoPoolListItemDetails({
     const { enqueueSnackbar } = useSnackbar();
     const withdrawIdoPool = async () => {
         const itxs: anchor.web3.TransactionInstruction[] = [];
-        let multisigUsdc = findAssociatedTokenAddress(multisigPDA, usdcMint)
-        if (!multisigUsdc) {
+        let multisigUsdcTokenAccount = findAssociatedTokenAddress(multisigPDA, usdcMint)
+        if (!multisigUsdcTokenAccount) {
             const { account: multisigUsdcAcc, instructions: createmultisigUsdcItxs} = await createTokenAccount(multisigClient.provider, usdcMint, multisigPDA);
-            multisigUsdc= multisigUsdcAcc.publicKey
+            multisigUsdcTokenAccount = multisigUsdcAcc.publicKey
             itxs.push(...createmultisigUsdcItxs);
         }
            // We use the uxp mint address as the seed, could use something else though.
@@ -1141,15 +1129,15 @@ function WithdrawIdoPoolListItemDetails({
             variant: "info",
         });
 
-        const data = withdrawIdoUsdcPoolData(idoClient);
-
+        const poolAccountKey = new PublicKey(poolAccountAddr)
+        const poolUsdcKey = new PublicKey(poolUsdcAddr)
         const accounts = [
             // HERE NEED TO ADD THE RIGHT ACCOUNTS -- Not sure what can be hardcoded or not your call for now.
             // Accounts expected can be found here https://github.com/UXDProtocol/uxd_ido/blob/main/programs/uxd_ido/src/lib.rs#L281
 
             // pool_account -- can be created arbitrarily - then will need to be referenced in the other operations and used on the front end (THE POINTER TO OUR IDO)
             {
-                pubkey: new PublicKey(poolAccountAddr),
+                pubkey: poolAccountKey,
                 isWritable: true,
                 isSigner: true,
             },
@@ -1163,7 +1151,7 @@ function WithdrawIdoPoolListItemDetails({
 
             // pool_usdc --
             {
-                pubkey: new PublicKey(poolUsdcAddr),
+                pubkey: poolUsdcKey,
                 isWritable: false,
                 isSigner: false,
             },
@@ -1177,7 +1165,7 @@ function WithdrawIdoPoolListItemDetails({
             },
             // creator_usdc -- is actually the token account that will receive the usdc
             {
-                pubkey: multisigUsdc,
+                pubkey: multisigUsdcTokenAccount,
                 isWritable: true,
                 isSigner: false,
             },
@@ -1195,15 +1183,32 @@ function WithdrawIdoPoolListItemDetails({
                 isSigner: false,
             },
         ];
+
+        const data = withdrawIdoUsdcPoolData(
+            idoClient, 
+            {
+                poolAccount: poolAccountKey,
+                poolSigner,
+                distributionAuthority: multisigPDA,
+                creatorUsdc: multisigUsdcTokenAccount,
+                poolUsdc: poolUsdcKey,
+                tokenProgram: TOKEN_PROGRAM_ID,
+                clock: anchor.web3.SYSVAR_CLOCK_PUBKEY,
+            },
+            itxs
+        );
+
+
         const transaction = new Keypair();
         const txSize = 1000; // todo
-        itxs.push((await multisigClient.account.transaction.createInstruction(
+        const txItx = await multisigClient.account.transaction.createInstruction(
             transaction,
             // @ts-ignore
             txSize
-        )));
+        );
+
         const tx = await multisigClient.rpc.createTransaction(
-            multisigClient.programId,
+            idoClient.programId,
             accounts,
             data,
             {
@@ -1216,7 +1221,7 @@ function WithdrawIdoPoolListItemDetails({
                 signers: [transaction],
                 instructions: [
                     
-                    ...itxs
+                    txItx
                 ],
             }
         );
@@ -1881,8 +1886,15 @@ function initializeIdoPoolData(idoClient: anchor.Program,
 
 
 // @ts-ignore
-function withdrawIdoUsdcPoolData(idoClient: anchor.Program) {
-    return idoClient.coder.instruction.encode("withdraw_pool_usdc", {});
+function withdrawIdoUsdcPoolData(idoClient: anchor.Program, accounts: any,  itxs: anchor.web3.TransactionInstruction[]) {
+    return idoClient.coder.instruction.encode(
+        "withdraw_pool_usdc", 
+        idoClient.instruction.withdrawPoolUsdc(
+            {
+                accounts, 
+                instructions: [...itxs]
+            }
+    ));
 }
 
 // @ts-ignore
