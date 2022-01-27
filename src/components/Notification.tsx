@@ -1,8 +1,7 @@
 import React from "react";
-import { useSelector } from "react-redux";
 import Button from "@material-ui/core/Button";
 import { TransactionSignature } from "@solana/web3.js";
-import { State as StoreState } from "../store/reducer";
+import { useConnectionConfig } from "../context/connection";
 
 type Props = {
   signature: string;
@@ -33,12 +32,8 @@ export async function withTx(
 
 export function ViewTransactionOnExplorerButton(props: Props) {
   const { signature } = props;
-  const { explorerClusterSuffix } = useSelector((state: StoreState) => {
-    return {
-      explorerClusterSuffix: state.common.network.explorerClusterSuffix,
-    };
-  });
-  const urlSuffix = `?cluster=${explorerClusterSuffix}`;
+  const { env } = useConnectionConfig();
+  const urlSuffix = `?cluster=${env.toString()}`;
   return (
     <Button
       color="inherit"

@@ -1,5 +1,4 @@
-import React from "react";
-import { Provider } from "react-redux";
+import React, { useMemo } from "react";
 import { useHistory, useLocation } from "react-router";
 import { HashRouter, Route } from "react-router-dom";
 import { SnackbarProvider } from "notistack";
@@ -7,11 +6,21 @@ import { MuiThemeProvider } from "@material-ui/core/styles";
 import CssBaseline from "@material-ui/core/CssBaseline";
 import { unstable_createMuiStrictModeTheme as createMuiTheme } from "@material-ui/core/styles";
 import { PublicKey } from "@solana/web3.js";
-import { store } from "./store";
-import WalletProvider from "./components/WalletProvider";
 import Layout from "./components/Layout";
 import Multisig from "./components/Multisig";
-import { networks } from "./store/reducer";
+import { WalletDialogProvider } from "@solana/wallet-adapter-material-ui";
+import { WalletProvider } from "@solana/wallet-adapter-react";
+import {
+  getLedgerWallet,
+  getMathWallet,
+  getPhantomWallet,
+  getSolflareWallet,
+  getSolletWallet,
+  getSolongWallet,
+  getTorusWallet,
+} from '@solana/wallet-adapter-wallets';
+import { ConnectionProvider } from "./context/connection";
+import './App.css'
 
 function App() {
   const theme = createMuiTheme({
@@ -25,35 +34,50 @@ function App() {
     },
     overrides: {},
   });
+  const wallets = useMemo(
+    () => [
+        getPhantomWallet(),
+        getSolflareWallet(),
+        getTorusWallet({
+            options: {
+                clientId: 'BOM5Cl7PXgE9Ylq1Z1tqzhpydY0RVr8k90QQ85N7AKI5QGSrr9iDC-3rvmy0K_hF0JfpLMiXoDhta68JwcxS1LQ',
+            },
+        }),
+        getLedgerWallet(),
+        getSolongWallet(),
+        getMathWallet(),
+        getSolletWallet(),
+    ],
+    []
+  );
+
   return (
-    <Provider store={store}>
-      <MuiThemeProvider theme={theme}>
-        <CssBaseline />
-        <SnackbarProvider maxSnack={5} autoHideDuration={8000}>
-          <WalletProvider>
-            <HashRouter basename={"/"}>
-              <Layout>
-                <Route exact path="/" component={MultisigPage} />
-                <Route
-                  exact
-                  path="/:address"
-                  component={MultisigInstancePage}
-                />
-              </Layout>
-            </HashRouter>
+    <MuiThemeProvider theme={theme}>
+      <CssBaseline />
+      <SnackbarProvider maxSnack={5} autoHideDuration={8000}>
+        <ConnectionProvider>
+          <WalletProvider wallets={wallets} autoConnect>
+              <WalletDialogProvider>
+                <HashRouter basename={"/"}>
+                      <Layout>
+                        <Route exact path="/" component={MultisigPage} />
+                        <Route
+                          exact
+                          path="/:address"
+                          component={MultisigInstancePage}
+                        />
+                      </Layout>
+                </HashRouter>
+              </WalletDialogProvider>
           </WalletProvider>
-        </SnackbarProvider>
-      </MuiThemeProvider>
-    </Provider>
+        </ConnectionProvider>
+      </SnackbarProvider>
+    </MuiThemeProvider>
   );
 }
 
 function MultisigPage() {
-  const { hash } = window.location;
-  if (hash) {
-    window.location.href = `/#/${networks.mainnet.multisigUpgradeAuthority!.toString()}`;
-  }
-  const multisig = networks.mainnet.multisigUpgradeAuthority;
+  const multisig = new PublicKey("3uztpEgUmvirDBYRXgDamUDZiU5EcgTwArQ2pULtHJPC");
   return <Multisig multisig={multisig} />;
 }
 

@@ -48,11 +48,10 @@ import {
   SYSVAR_RENT_PUBKEY,
   SYSVAR_CLOCK_PUBKEY,
 } from "@solana/web3.js";
-import * as anchor from "@project-serum/anchor";
-import { useWallet } from "./WalletProvider";
 import { ViewTransactionOnExplorerButton } from "./Notification";
 import * as idl from "../utils/idl";
-import { networks } from "../store/reducer";
+import { useMultisigProgram } from "../hooks/useMultisigProgram";
+import { useWallet } from "@solana/wallet-adapter-react";
 
 export default function Multisig({ multisig }: { multisig?: PublicKey }) {
   return (
@@ -96,7 +95,7 @@ function NewMultisigButton() {
 }
 
 export function MultisigInstance({ multisig }: { multisig: PublicKey }) {
-  const { multisigClient } = useWallet();
+  const multisigClient = useMultisigProgram();
   const [multisigAccount, setMultisigAccount] = useState<any>(undefined);
   const [transactions, setTransactions] = useState<any>(null);
   const [showSignerDialog, setShowSignerDialog] = useState(false);
@@ -219,6 +218,7 @@ export function MultisigInstance({ multisig }: { multisig: PublicKey }) {
       />
       {multisigAccount && (
         <SignerDialog
+          key={multisigClient.provider.wallet.publicKey.toString()}
           multisig={multisig}
           multisigAccount={multisigAccount}
           open={showSignerDialog}
@@ -237,7 +237,7 @@ export function NewMultisigDialog({
   onClose: () => void;
 }) {
   const history = useHistory();
-  const { multisigClient } = useWallet();
+  const multisigClient = useMultisigProgram();
   const { enqueueSnackbar } = useSnackbar();
   const [threshold, setThreshold] = useState(2);
   // @ts-ignore
@@ -375,7 +375,7 @@ function TxListItem({
   tx: any;
 }) {
   const { enqueueSnackbar } = useSnackbar();
-  const { multisigClient } = useWallet();
+  const multisigClient = useMultisigProgram();
   const [open, setOpen] = useState(false);
   const [txAccount, setTxAccount] = useState(tx.account);
   useEffect(() => {
@@ -539,8 +539,8 @@ function TxListItem({
                 <TableBody>
                   {rows.map((r) => (
                     <TableRow>
-                      <TableCell>{r.field}</TableCell>
-                      <TableCell align="right">{r.value}</TableCell>
+                      <TableCell key={r.field}>{r.field}</TableCell>
+                      <TableCell align="right" key={`${r.field}-value`}>{r.value}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -669,14 +669,14 @@ function SignerDialog({
   open: boolean;
   onClose: () => void;
 }) {
-  const { multisigClient } = useWallet();
+  const multisigClient = useMultisigProgram();
   const [signer, setSigner] = useState<null | string>(null);
   useEffect(() => {
     PublicKey.findProgramAddress(
       [multisig.toBuffer()],
       multisigClient.programId
     ).then((addrNonce) => setSigner(addrNonce[0].toString()));
-  }, [multisig, multisigClient.programId, setSigner]);
+  }, [multisig, multisigClient.programId, setSigner, multisigClient]);
   return (
     <Dialog open={open} fullWidth onClose={onClose} maxWidth="md">
       <DialogTitle>
@@ -685,12 +685,6 @@ function SignerDialog({
         </Typography>
       </DialogTitle>
       <DialogContent style={{ paddingBottom: "16px" }}>
-        {multisig?.equals(networks.mainnet.multisigUpgradeAuthority!) && (
-          <DialogContentText>
-            This multisig is the upgrade authority for the multisig program
-            itself.
-          </DialogContentText>
-        )}
         <DialogContentText>
           <b>Program derived address</b>: {signer}. This is the address one
           should use as the authority for data governed by the multisig.
@@ -703,7 +697,7 @@ function SignerDialog({
           </TableHead>
           <TableBody>
             {multisigAccount.owners.map((r: any) => (
-              <TableRow>
+              <TableRow key={r.toString()}>
                 <TableCell>{r.toString()}</TableCell>
               </TableRow>
             ))}
@@ -808,7 +802,7 @@ function ChangeThresholdListItemDetails({
   didAddTransaction: (tx: PublicKey) => void;
 }) {
   const [threshold, setThreshold] = useState(2);
-  const { multisigClient } = useWallet();
+  const multisigClient = useMultisigProgram();
   // @ts-ignore
   const { enqueueSnackbar } = useSnackbar();
   const changeThreshold = async () => {
@@ -927,7 +921,7 @@ function SetOwnersListItemDetails({
   onClose: Function;
   didAddTransaction: (tx: PublicKey) => void;
 }) {
-  const { multisigClient } = useWallet();
+  const multisigClient = useMultisigProgram();
   // @ts-ignore
   const zeroAddr = new PublicKey("11111111111111111111111111111111").toString();
   const [participants, setParticipants] = useState([zeroAddr]);
@@ -977,6 +971,9 @@ function SetOwnersListItemDetails({
         ],
       }
     );
+    if (!tx) {
+      return;
+    }
     enqueueSnackbar("Transaction created", {
       variant: "success",
       action: <ViewTransactionOnExplorerButton signature={tx} />,
@@ -1070,10 +1067,11 @@ function UpgradeIdlListItemDetails({
   onClose: Function;
   didAddTransaction: (tx: PublicKey) => void;
 }) {
+
   const [programId, setProgramId] = useState<null | string>(null);
   const [buffer, setBuffer] = useState<null | string>(null);
 
-  const { multisigClient } = useWallet();
+  const multisigClient = useMultisigProgram();
   const { enqueueSnackbar } = useSnackbar();
   const createTransactionAccount = async () => {
     enqueueSnackbar("Creating transaction", {
@@ -1211,7 +1209,7 @@ function UpgradeProgramListItemDetails({
   const [programId, setProgramId] = useState<null | string>(null);
   const [buffer, setBuffer] = useState<null | string>(null);
 
-  const { multisigClient } = useWallet();
+  const multisigClient = useMultisigProgram();
   const { enqueueSnackbar } = useSnackbar();
   const createTransactionAccount = async () => {
     enqueueSnackbar("Creating transaction", {

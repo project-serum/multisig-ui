@@ -28,6 +28,14 @@
   color: #61dafb;
 }
 
+.makeStyles-root-3 div.MuiDialogTitle-root {
+  background-color: #bcbcbd;
+}
+
+.makeStyles-root-3 .MuiDialogContent-root .MuiList-root {
+  background: #ffffff !important;
+}
+
 @keyframes App-logo-spin {
   from {
     transform: rotate(0deg);

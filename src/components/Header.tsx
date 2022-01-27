@@ -1,26 +1,23 @@
-import React, { useState, useEffect, ReactElement } from "react";
-import { useSelector, useDispatch } from "react-redux";
+import React, { useState } from "react";
 import { useHistory } from "react-router-dom";
-import { useSnackbar } from "notistack";
 import AppBar from "@material-ui/core/AppBar";
 import Toolbar from "@material-ui/core/Toolbar";
-import Select from "@material-ui/core/Select";
 import Menu from "@material-ui/core/Menu";
 import Link from "@material-ui/core/Link";
 import Typography from "@material-ui/core/Typography";
 import MenuItem from "@material-ui/core/MenuItem";
 import IconButton from "@material-ui/core/IconButton";
-import ExitToAppIcon from "@material-ui/icons/ExitToApp";
 import Button from "@material-ui/core/Button";
-import PersonIcon from "@material-ui/icons/Person";
 import BubbleChartIcon from "@material-ui/icons/BubbleChart";
 import SearchIcon from "@material-ui/icons/Search";
 import { PublicKey } from "@solana/web3.js";
-import { networks, State as StoreState, ActionType } from "../store/reducer";
-import { useWallet } from "./WalletProvider";
+import { useAnchorWallet } from "@solana/wallet-adapter-react";
+import DisconnectIcon from '@material-ui/icons/LinkOff';
+import { WalletDisconnectButton, WalletMultiButton } from "@solana/wallet-adapter-material-ui";
+import { ENDPOINTS, useConnectionConfig } from "../context/connection";
 
 export default function Header() {
-  const { wallet } = useWallet();
+  const wallet  = useAnchorWallet();
   const history = useHistory();
   const [multisigAddress, setMultisigAddress] = useState("");
   const disabled = !isValidPubkey(multisigAddress);
@@ -45,14 +42,7 @@ export default function Header() {
           }}
         >
           <div style={{ display: "flex", flex: 1 }}>
-            <SerumLogoButton />
             <BarButton label="Multisig" hrefClient="/" />
-            <BarButton label="Trade" href="https://dex.projectserum.com" />
-            <BarButton label="Stake" href="https://stake.projectserum.com" />
-            <BarButton
-              label="Lockup"
-              href="https://stake.projectserum.com/#/lockup"
-            />
             <div
               style={{
                 marginLeft: "16px",
@@ -92,15 +82,8 @@ export default function Header() {
             }}
           >
             <NetworkSelector />
-            {!wallet.publicKey ? (
-              <WalletConnectButton
-                style={{
-                  display: wallet.publicKey ? "none" : "",
-                }}
-              />
-            ) : (
-              <UserSelector />
-            )}
+            <WalletMultiButton />
+            {wallet && <WalletDisconnectButton startIcon={<DisconnectIcon />} style={{ marginLeft: 8 }} />}
           </div>
         </div>
       </Toolbar>
@@ -174,11 +157,8 @@ function BarButton(props: BarButtonProps) {
 }
 
 function NetworkSelector() {
-  const network = useSelector((state: StoreState) => {
-    return state.common.network;
-  });
-  const dispatch = useDispatch();
   const [anchorEl, setAnchorEl] = useState(null);
+  const {env, setEndpoint} = useConnectionConfig();
 
   const handleClose = () => {
     setAnchorEl(null);
@@ -205,7 +185,7 @@ function NetworkSelector() {
       >
         <BubbleChartIcon />
         <Typography style={{ marginLeft: "5px", fontSize: "15px" }}>
-          {network.label}
+          {env.toString()}
         </Typography>
       </Button>
       <Menu
@@ -217,123 +197,21 @@ function NetworkSelector() {
           color: "white",
         }}
       >
-        {Object.keys(networks).map((n: string) => (
-          <MenuItem
-            key={n}
+        {ENDPOINTS.map(endpoint => {
+          return (
+            <MenuItem
+            key={endpoint.name.toString()}
             onClick={() => {
               handleClose();
-              dispatch({
-                type: ActionType.CommonSetNetwork,
-                item: {
-                  network: networks[n],
-                  networkKey: n,
-                },
-              });
+              setEndpoint(endpoint.endpoint);
             }}
           >
-            <Typography>{networks[n].label}</Typography>
+            <Typography>{endpoint.name}</Typography>
           </MenuItem>
-        ))}
+          )
+        })}
       </Menu>
     </div>
-  );
-}
-
-function UserSelector() {
-  const { wallet } = useWallet();
-
-  return (
-    <Select
-      displayEmpty
-      renderValue={() => {
-        return (
-          <Typography style={{ overflow: "hidden" }}>
-            {wallet.publicKey.toString()}
-          </Typography>
-        );
-      }}
-      style={{
-        marginLeft: "12px",
-        width: "150px",
-      }}
-      onChange={(e) => {
-        if (e.target.value === "disconnect") {
-          wallet.disconnect();
-        }
-      }}
-    >
-      <MenuItem value="disconnect">
-        <IconButton color="inherit">
-          <ExitToAppIcon />
-          <Typography style={{ marginLeft: "15px" }}>Disconnect</Typography>
-        </IconButton>
-      </MenuItem>
-    </Select>
-  );
-}
-
-type WalletConnectButtonProps = {
-  style?: any;
-};
-
-export function WalletConnectButton(
-  props: WalletConnectButtonProps
-): ReactElement {
-  const { showDisconnect } = useSelector((state: StoreState) => {
-    return {
-      showDisconnect: state.common.isWalletConnected,
-    };
-  });
-  const dispatch = useDispatch();
-  const { wallet, multisigClient } = useWallet();
-  const { enqueueSnackbar } = useSnackbar();
-
-  // Wallet connection event listeners.
-  useEffect(() => {
-    wallet.on("disconnect", () => {
-      enqueueSnackbar("Disconnected from wallet", {
-        variant: "info",
-        autoHideDuration: 2500,
-      });
-      dispatch({
-        type: ActionType.CommonWalletDidDisconnect,
-        item: {},
-      });
-      dispatch({
-        type: ActionType.CommonTriggerShutdown,
-        item: {},
-      });
-    });
-    wallet.on("connect", async () => {
-      dispatch({
-        type: ActionType.CommonWalletDidConnect,
-        item: {},
-      });
-    });
-  }, [wallet, dispatch, enqueueSnackbar, multisigClient.provider.connection]);
-
-  return showDisconnect ? (
-    <Button
-      style={props.style}
-      color="inherit"
-      onClick={() => wallet.disconnect()}
-    >
-      <ExitToAppIcon />
-      <Typography style={{ marginLeft: "5px", fontSize: "15px" }}>
-        Disconnect
-      </Typography>
-    </Button>
-  ) : (
-    <Button
-      style={props.style}
-      color="inherit"
-      onClick={() => wallet.connect()}
-    >
-      <PersonIcon />
-      <Typography style={{ marginLeft: "5px", fontSize: "15px" }}>
-        Connect wallet
-      </Typography>
-    </Button>
   );
 }
 
